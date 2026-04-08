@@ -12,12 +12,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('visits', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('patient_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('doctor_id')->constrained('users')->cascadeOnDelete();
+            $table->id('visit_id');
+            $table->foreignId('patient_id')->constrained('patients', 'patient_id')->cascadeOnDelete();
+            // Note: assuming doctor_id from doctors table, not users table, because of the doctors table created. If not, it references users. But the prompt has 'doctors' table with doctor_id (PK), so doctor_id references doctors.
+            $table->foreignId('doctor_id')->constrained('doctors', 'doctor_id')->cascadeOnDelete();
             $table->datetime('visit_date');
-            $table->text('complaint')->nullable();
-            $table->enum('status', ['waiting', 'in_progress', 'completed', 'cancelled'])->default('waiting');
+            $table->enum('status', ['waiting', 'in_progress', 'done', 'paid'])->default('waiting');
+            $table->foreignId('created_by')->nullable()->constrained('users', 'user_id');
             $table->timestamps();
         });
     }

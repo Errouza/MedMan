@@ -12,11 +12,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('payments', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('visit_id')->constrained()->cascadeOnDelete();
-            $table->decimal('total_amount', 15, 2)->default(0);
-            $table->enum('status', ['unpaid', 'paid'])->default('unpaid');
-            $table->string('payment_method')->nullable();
+            $table->id('payment_id');
+            $table->foreignId('visit_id')->unique()->constrained('visits', 'visit_id')->cascadeOnDelete();
+            $table->decimal('amount', 15, 2)->default(0);
+            $table->enum('payment_method', ['cash', 'qris'])->nullable();
+            $table->enum('payment_status', ['paid', 'unpaid'])->default('unpaid');
             $table->datetime('paid_at')->nullable();
             $table->timestamps();
         });
