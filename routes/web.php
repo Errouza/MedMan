@@ -17,9 +17,22 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     
     // Rute untuk Admin & Dokter (Pasien)
-    Route::get('/patients', function() { 
-        $patients = \App\Models\Patient::latest()->get();
-        return view('patients.index', compact('patients')); 
+    Route::get('/patients', function(\Illuminate\Http\Request $request) { 
+        $query = \App\Models\Patient::query();
+        $searchPerformed = false;
+        
+        if ($request->filled('search_name') || $request->filled('search_nik')) {
+            $searchPerformed = true;
+            if ($request->filled('search_name')) {
+                $query->where('name', 'like', '%' . $request->search_name . '%');
+            }
+            if ($request->filled('search_nik')) {
+                $query->where('nik', $request->search_nik);
+            }
+        }
+        
+        $patients = $query->latest()->get();
+        return view('patients.index', compact('patients', 'searchPerformed')); 
     })->name('patients.index');
 
     Route::post('/patients', function(\Illuminate\Http\Request $request) {
@@ -27,6 +40,8 @@ Route::middleware('auth')->group(function () {
             'name' => 'required|string|max:255',
             'nik' => 'required|string|size:16|unique:patients,nik',
             'phone' => 'required|string|min:10',
+            'address' => 'nullable|string|max:500',
+            'birth_date' => 'nullable|date',
             'gejala' => 'nullable|string|max:1000',
             'tindakan' => 'nullable|string|max:1000',
         ]);
@@ -36,6 +51,8 @@ Route::middleware('auth')->group(function () {
             'name' => $request->name,
             'nik' => $request->nik,
             'phone' => $request->phone,
+            'address' => $request->address,
+            'birth_date' => $request->birth_date,
             'gejala' => $request->gejala,
             'tindakan' => $request->tindakan,
         ]);
