@@ -21,14 +21,21 @@ Route::middleware('auth')->group(function () {
         $query = \App\Models\Patient::query();
         $searchPerformed = false;
         
-        if ($request->filled('search_name') || $request->filled('search_nik')) {
-            $searchPerformed = true;
-            if ($request->filled('search_name')) {
-                $query->where('name', 'like', '%' . $request->search_name . '%');
+        if (Auth::user()->role === 'admin') {
+            // Admin logic: search all patients
+            if ($request->filled('search_name') || $request->filled('search_nik')) {
+                $searchPerformed = true;
+                if ($request->filled('search_name')) {
+                    $query->where('name', 'like', '%' . $request->search_name . '%');
+                }
+                if ($request->filled('search_nik')) {
+                    $query->where('nik', $request->search_nik);
+                }
             }
-            if ($request->filled('search_nik')) {
-                $query->where('nik', $request->search_nik);
-            }
+        } else {
+            // Doctor logic: only show patients who registered today and are waiting for treatment
+            $query->whereDate('created_at', \Carbon\Carbon::today())
+                  ->whereNull('tindakan');
         }
         
         $patients = $query->latest()->get();
