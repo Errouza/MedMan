@@ -48,6 +48,10 @@ class RegisteredUserController extends Controller
 
         Auth::login($user);
 
+        if ($user->role === 'doctor') {
+            return redirect(route('patients.index', absolute: false));
+        }
+
         return redirect(route('dashboard', absolute: false));
     }
 }
