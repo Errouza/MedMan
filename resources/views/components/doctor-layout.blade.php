@@ -51,23 +51,37 @@
         </div>
 
         <!-- Tab Navigation & Content Container -->
-        <div class="relative w-full mt-12">
+        <div class="w-full mt-8 flex flex-col">
             <!-- Folder Tabs -->
-            <div class="flex items-end gap-3 px-10 absolute -top-11 left-0 right-0 z-0">
+            <div class="flex items-end gap-2 px-10 relative z-20 -mb-[1px]">
                 <!-- Tab 1 -->
-                <a href="{{ route('patients.index') }}" class="{{ request()->routeIs('patients.*') ? 'bg-white border-t-[3px] border-[#6A9DF6] text-[#6A9DF6] cursor-default' : 'bg-[#6A9DF6] hover:bg-[#5b8ce0] text-white cursor-pointer shadow-sm' }} font-[800] text-[14px] px-10 py-3 rounded-t-[14px] transition-colors">
+                <a href="{{ route('patients.index') }}" class="{{ request()->routeIs('patients.index') ? 'bg-white border-t-[3px] border-[#6A9DF6] border-x border-gray-100 border-b-0 text-[#6A9DF6] pb-[13px] pt-3 px-8' : 'bg-[#6A9DF6] hover:bg-[#5b8ce0] text-white pb-2.5 pt-2.5 px-7 border border-transparent' }} rounded-t-[16px] font-[800] text-[14px] transition-all relative">
+                    <!-- active tab mask for bottom border -->
+                    @if(request()->routeIs('patients.index'))
+                        <div class="absolute -bottom-[2px] left-0 right-0 h-[3px] bg-white"></div>
+                    @endif
                     Daftar Pasien
                 </a>
                 <!-- Tab 2 -->
-                <a href="#" class="bg-[#6A9DF6] hover:bg-[#5b8ce0] cursor-pointer text-white font-[800] text-[14px] px-8 py-2.5 rounded-t-[14px] transition-colors shadow-sm">
+                <a href="{{ route('pelayanan.index') }}" class="{{ request()->routeIs('patients.diagnose') || request()->routeIs('pelayanan.index') ? 'bg-white border-t-[3px] border-[#6A9DF6] border-x border-gray-100 border-b-0 text-[#6A9DF6] pb-[13px] pt-3 px-8' : 'bg-[#6A9DF6] hover:bg-[#5b8ce0] text-white pb-2.5 pt-2.5 px-7 border border-transparent' }} rounded-t-[16px] font-[800] text-[14px] transition-all relative">
+                    <!-- active tab mask for bottom border -->
+                    @if(request()->routeIs('patients.diagnose') || request()->routeIs('pelayanan.index'))
+                        <div class="absolute -bottom-[2px] left-0 right-0 h-[3px] bg-white"></div>
+                    @endif
                     Pelayanan Pasien
                 </a>
                 <!-- Tab 3 -->
-                <a href="#" class="bg-[#6A9DF6] hover:bg-[#5b8ce0] cursor-pointer text-white font-[800] text-[14px] px-8 py-2.5 rounded-t-[14px] transition-colors shadow-sm">
+                <a href="{{ route('prescriptions.index') }}" class="{{ request()->routeIs('prescriptions.index') ? 'bg-white border-t-[3px] border-[#6A9DF6] border-x border-gray-100 border-b-0 text-[#6A9DF6] pb-[13px] pt-3 px-8' : 'bg-[#6A9DF6] hover:bg-[#5b8ce0] text-white pb-2.5 pt-2.5 px-7 border border-transparent' }} rounded-t-[16px] font-[800] text-[14px] transition-all relative">
+                    @if(request()->routeIs('prescriptions.index'))
+                        <div class="absolute -bottom-[2px] left-0 right-0 h-[3px] bg-white"></div>
+                    @endif
                     Buat Resep
                 </a>
                 <!-- Tab 4 -->
-                <a href="#" class="bg-[#6A9DF6] hover:bg-[#5b8ce0] cursor-pointer text-white font-[800] text-[14px] px-8 py-2.5 rounded-t-[14px] transition-colors shadow-sm">
+                <a href="{{ route('certificates.index') }}" class="{{ request()->routeIs('certificates.index') ? 'bg-white border-t-[3px] border-[#6A9DF6] border-x border-gray-100 border-b-0 text-[#6A9DF6] pb-[13px] pt-3 px-8' : 'bg-[#6A9DF6] hover:bg-[#5b8ce0] text-white pb-2.5 pt-2.5 px-7 border border-transparent' }} rounded-t-[16px] font-[800] text-[14px] transition-all relative">
+                    @if(request()->routeIs('certificates.index'))
+                        <div class="absolute -bottom-[2px] left-0 right-0 h-[3px] bg-white"></div>
+                    @endif
                     Surat Keterangan
                 </a>
             </div>

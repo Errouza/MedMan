@@ -185,53 +185,64 @@
 <x-doctor-layout>
     <!-- Table -->
     <div class="w-full overflow-x-auto mt-4">
-                        <table class="w-full text-left min-w-[800px]">
-                            <thead>
-                                <tr class="border-b-[2px] border-gray-100">
-                                    <th class="pb-5 px-4 text-[14px] font-[900] text-black tracking-wide">Rekam Medis</th>
-                                    <th class="pb-5 px-4 text-[14px] font-[900] text-black tracking-wide text-center">Nama Pasien</th>
-                                    <th class="pb-5 px-4 text-[14px] font-[900] text-black tracking-wide text-center">NIK</th>
-                                    <th class="pb-5 px-4 text-[14px] font-[900] text-black tracking-wide text-center">Tanggal</th>
-                                    <th class="pb-5 px-4"></th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y-[2px] divide-gray-50">
-                                @forelse($patients ?? [] as $index => $patient)
-                                @php
-                                    $isActive = $index === 0; // Mockup shows first row is active/blue
-                                    $textColor = $isActive ? 'text-[#6A9DF6]' : 'text-gray-500';
-                                    $nameColor = $isActive ? 'text-[#0A3D74]' : 'text-gray-700';
-                                    $btnColor = $isActive ? 'bg-[#6A9DF6] hover:bg-[#5b8ce0]' : 'bg-[#4B5563] hover:bg-gray-700';
-                                    $btnText = $isActive ? 'Lakukan Tindakan' : 'Cek Aktifitas';
-                                @endphp
-                                <tr class="hover:bg-blue-50/50 transition-colors group">
-                                    <td class="py-6 px-4 text-[14px] font-[800] {{ $textColor }}">{{ $patient->medical_record_number }}</td>
-                                    <td class="py-6 px-4 text-center">
-                                        <div class="flex flex-col items-center">
-                                            <span class="text-[14px] font-[800] {{ $nameColor }}">{{ $patient->name }}</span>
-                                            <span class="text-[10px] font-bold text-gray-400 mt-0.5">{{ $patient->phone ?? '-' }} | {{ $patient->address ?? '-' }}</span>
-                                        </div>
-                                    </td>
-                                    <td class="py-6 px-4 text-[14px] font-[800] {{ $textColor }} text-center">{{ $patient->nik }}</td>
-                                    <td class="py-6 px-4 text-[14px] font-[800] {{ $textColor }} text-center">{{ $patient->created_at->format('j M H:i, Y') }}</td>
-                                    <td class="py-6 px-4 text-right">
-                                        <button class="{{ $btnColor }} text-white font-[800] text-[12px] px-6 py-2.5 rounded-[10px] transition-colors shadow-sm tracking-wide">
-                                            {{ $btnText }}
-                                        </button>
-                                    </td>
-                                </tr>
-                                @empty
-                                <tr>
-                                    <td colspan="5" class="py-16 text-center">
-                                        <div class="flex flex-col items-center justify-center text-gray-400">
-                                            <svg class="w-12 h-12 mb-3 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                                            <span class="font-bold text-[14px]">Belum ada daftar pasien.</span>
-                                        </div>
-                                    </td>
-                                </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
+        <table class="w-full text-left min-w-[800px]">
+            <thead>
+                <tr class="border-b-[2px] border-gray-100">
+                    <th class="pb-5 px-4 text-[14px] font-[900] text-black tracking-wide">Rekam Medis</th>
+                    <th class="pb-5 px-4 text-[14px] font-[900] text-black tracking-wide text-center">Nama Pasien</th>
+                    <th class="pb-5 px-4 text-[14px] font-[900] text-black tracking-wide text-center">NIK</th>
+                    <th class="pb-5 px-4 text-[14px] font-[900] text-black tracking-wide text-center">Tanggal</th>
+                    <th class="pb-5 px-4"></th>
+                </tr>
+            </thead>
+            <tbody class="divide-y-[2px] divide-gray-50">
+                @forelse($patients ?? [] as $index => $patient)
+                @php
+                    $isWaiting = $patient->status === 'waiting';
+                    $isInProgress = $patient->status === 'in_progress';
+                    $textColor = $isInProgress ? 'text-[#6A9DF6]' : 'text-gray-500';
+                    $nameColor = $isInProgress ? 'text-[#0A3D74]' : 'text-gray-700';
+                @endphp
+                <tr class="hover:bg-blue-50/50 transition-colors group {{ $isInProgress ? 'bg-blue-50/30' : '' }}">
+                    <td class="py-6 px-4 text-[14px] font-[800] {{ $textColor }}">{{ $patient->medical_record_number }}</td>
+                    <td class="py-6 px-4 text-center">
+                        <div class="flex flex-col items-center">
+                            <span class="text-[14px] font-[800] {{ $nameColor }}">{{ $patient->name }}</span>
+                            <span class="text-[10px] font-bold text-gray-400 mt-0.5">{{ $patient->phone ?? '-' }} | {{ $patient->address ?? '-' }}</span>
+                        </div>
+                    </td>
+                    <td class="py-6 px-4 text-[14px] font-[800] {{ $textColor }} text-center">{{ $patient->nik }}</td>
+                    <td class="py-6 px-4 text-[14px] font-[800] {{ $textColor }} text-center">{{ $patient->created_at->format('j M H:i, Y') }}</td>
+                    <td class="py-6 px-4 text-right">
+                        @if($isWaiting)
+                            <form action="{{ route('patients.update_status', $patient) }}" method="POST" class="inline">
+                                @csrf
+                                @method('PATCH')
+                                <input type="hidden" name="status" value="in_progress">
+                                <button type="submit" class="bg-[#4B5563] hover:bg-gray-700 text-white font-[800] text-[12px] px-6 py-2.5 rounded-[10px] transition-colors shadow-sm tracking-wide">
+                                    Terima Pasien
+                                </button>
+                            </form>
+                        @elseif($isInProgress)
+                            <a href="{{ route('patients.diagnose', $patient) }}" class="text-white bg-[#6A9DF6] hover:bg-[#0A3D74] font-[900] text-[12px] px-6 py-2.5 rounded-[10px] transition-colors shadow-sm uppercase tracking-wider inline-flex items-center gap-2">
+                                <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                Sedang Diperiksa
+                            </a>
+                        @endif
+                    </td>
+                </tr>
+                @empty
+                <tr>
+                    <td colspan="5" class="py-16 text-center">
+                        <div class="flex flex-col items-center justify-center text-gray-400">
+                            <svg class="w-12 h-12 mb-3 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                            <span class="font-bold text-[14px]">Belum ada daftar pasien.</span>
+                        </div>
+                    </td>
+                </tr>
+                @endforelse
+            </tbody>
+        </table>
     </div>
 </x-doctor-layout>
 @endif

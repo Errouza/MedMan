@@ -139,6 +139,7 @@
                         <th class="pb-4 px-2 text-[12px] font-[900] text-gray-400 uppercase tracking-widest text-center">Rekam Medis</th>
                         <th class="pb-4 px-2 text-[12px] font-[900] text-gray-400 uppercase tracking-widest text-center">Waktu Daftar</th>
                         <th class="pb-4 px-2 text-[12px] font-[900] text-gray-400 uppercase tracking-widest">Status</th>
+                        <th class="pb-4 px-2 text-[12px] font-[900] text-gray-400 uppercase tracking-widest text-right">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y-[2px] divide-gray-50">
@@ -149,11 +150,33 @@
                     
                     @forelse($todayPatients as $index => $patient)
                     @php
-                        // Determine status based on 'tindakan'
-                        $isDone = !is_null($patient->tindakan);
-                        $statusColor = $isDone ? 'bg-[#52C41A]' : 'bg-[#F59E0B]';
-                        $statusShadow = $isDone ? 'shadow-[0_0_8px_rgba(82,196,26,0.4)]' : 'shadow-[0_0_8px_rgba(245,158,11,0.4)]';
-                        $statusText = $isDone ? 'Selesai' : 'Menunggu';
+                        // Determine status
+                        $statusText = '';
+                        $statusColor = '';
+                        $statusShadow = '';
+                        
+                        switch($patient->status) {
+                            case 'waiting':
+                                $statusText = 'Menunggu';
+                                $statusColor = 'bg-[#F59E0B]';
+                                $statusShadow = 'shadow-[0_0_8px_rgba(245,158,11,0.4)]';
+                                break;
+                            case 'in_progress':
+                                $statusText = 'Diperiksa';
+                                $statusColor = 'bg-[#3B82F6]'; // Blue
+                                $statusShadow = 'shadow-[0_0_8px_rgba(59,130,246,0.4)]';
+                                break;
+                            case 'checked':
+                                $statusText = 'Tagihan';
+                                $statusColor = 'bg-[#10B981]'; // Green
+                                $statusShadow = 'shadow-[0_0_8px_rgba(16,185,129,0.4)]';
+                                break;
+                            case 'completed':
+                                $statusText = 'Lunas';
+                                $statusColor = 'bg-gray-400';
+                                $statusShadow = '';
+                                break;
+                        }
                     @endphp
                     <tr class="hover:bg-blue-50/50 transition-colors group">
                         <td class="py-5 px-2">
@@ -174,6 +197,20 @@
                                 <span class="w-3 h-3 rounded-full {{ $statusColor }} {{ $statusShadow }}"></span>
                                 <span class="text-[13px] font-[900] text-gray-700 w-20">{{ $statusText }}</span>
                             </div>
+                        </td>
+                        <td class="py-5 px-2 text-right">
+                            @if($patient->status === 'checked')
+                            <form action="{{ route('patients.update_status', $patient) }}" method="POST" class="inline">
+                                @csrf
+                                @method('PATCH')
+                                <input type="hidden" name="status" value="completed">
+                                <button type="submit" class="bg-[#10B981] hover:bg-[#059669] text-white text-[11px] font-[900] px-4 py-2 rounded-[8px] transition-colors shadow-sm uppercase tracking-wide">
+                                    Bayar Tagihan
+                                </button>
+                            </form>
+                            @else
+                                <span class="text-gray-300">-</span>
+                            @endif
                         </td>
                     </tr>
                     @empty

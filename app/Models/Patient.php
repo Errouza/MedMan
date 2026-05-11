@@ -16,6 +16,9 @@ class Patient extends Model
         'address',
         'phone',
         'gejala',
+        'diagnosa',
         'tindakan',
+        'harga',
+        'status',
     ];
 }

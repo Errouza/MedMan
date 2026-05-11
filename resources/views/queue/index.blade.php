@@ -106,16 +106,27 @@
                     <tbody class="divide-y-[2px] divide-gray-50">
                         @forelse($patients ?? [] as $index => $patient)
                         @php
-                            $statuses = [
-                                ['color' => 'bg-[#52C41A]', 'shadow' => 'shadow-[0_0_8px_rgba(82,196,26,0.4)]', 'text' => 'Done', 'btn' => 'Cek Aktifitas'],
-                                ['color' => 'bg-[#F59E0B]', 'shadow' => 'shadow-[0_0_8px_rgba(245,158,11,0.4)]', 'text' => 'In Pro', 'btn' => 'Lakukan Tindakan'],
-                                ['color' => 'bg-[#34D399]', 'shadow' => 'shadow-[0_0_8px_rgba(52,211,153,0.4)]', 'text' => 'Paid', 'btn' => 'Cek Aktifitas'],
-                            ];
-                            $s = $statuses[$index % 3];
+                            // Determine status
+                            $s = ['color' => '', 'shadow' => '', 'text' => '', 'btn' => ''];
+                            
+                            switch($patient->status) {
+                                case 'waiting':
+                                    $s = ['color' => 'bg-[#F59E0B]', 'shadow' => 'shadow-[0_0_8px_rgba(245,158,11,0.4)]', 'text' => 'Menunggu', 'btn' => '-'];
+                                    break;
+                                case 'in_progress':
+                                    $s = ['color' => 'bg-[#3B82F6]', 'shadow' => 'shadow-[0_0_8px_rgba(59,130,246,0.4)]', 'text' => 'Diperiksa', 'btn' => '-'];
+                                    break;
+                                case 'checked':
+                                    $s = ['color' => 'bg-[#10B981]', 'shadow' => 'shadow-[0_0_8px_rgba(16,185,129,0.4)]', 'text' => 'Tagihan', 'btn' => '-'];
+                                    break;
+                                case 'completed':
+                                    $s = ['color' => 'bg-gray-400', 'shadow' => '', 'text' => 'Lunas', 'btn' => 'Lihat Data'];
+                                    break;
+                            }
                         @endphp
                         <tr class="hover:bg-blue-50 transition-colors group">
                             <td class="py-5 px-2 text-[14px] font-[800] text-[#0A3D74]">{{ $patient->medical_record_number }}</td>
-                            <td class="py-5 px-2 text-[14px] font-[800] text-[#0A3D74] text-center">1</td>
+                            <td class="py-5 px-2 text-[14px] font-[800] text-[#0A3D74] text-center">-</td>
                             <td class="py-5 px-2">
                                 <div class="flex flex-col">
                                     <span class="text-[14px] font-[800] text-[#6A9DF6] group-hover:text-[#0A3D74] transition-colors">{{ $patient->name }}</span>
@@ -127,13 +138,17 @@
                             <td class="py-5 px-2">
                                 <div class="flex items-center gap-2.5">
                                     <span class="w-3.5 h-3.5 rounded-full {{ $s['color'] }} {{ $s['shadow'] }}"></span>
-                                    <span class="text-[14px] font-[900] text-gray-700 w-16 text-left">{{ $s['text'] }}</span>
+                                    <span class="text-[14px] font-[900] text-gray-700 w-20 text-left">{{ $s['text'] }}</span>
                                 </div>
                             </td>
                             <td class="py-5 px-2 text-right">
+                                @if($s['btn'] !== '-')
                                 <button class="bg-[#6A9DF6] hover:bg-[#0A3D74] text-white font-[800] text-[11px] px-5 py-2.5 rounded-[10px] transition-colors shadow-sm tracking-widest uppercase">
                                     {{ $s['btn'] }}
                                 </button>
+                                @else
+                                <span class="text-gray-300">-</span>
+                                @endif
                             </td>
                         </tr>
                         @empty
