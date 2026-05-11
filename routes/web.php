@@ -162,6 +162,62 @@ Route::middleware('auth')->group(function () {
         return back()->with('success', 'Surat Keterangan Sakit berhasil dibuat!');
     })->name('certificates.store');
 
+    // Fitur Pembayaran (Billing)
+    Route::get('/billing/{patient}', function(\App\Models\Patient $patient) {
+        if ($patient->status !== 'checked' && $patient->status !== 'completed') {
+            return redirect()->route('dashboard')->with('error', 'Pasien belum selesai diperiksa.');
+        }
+        
+        $prescriptions = \App\Models\Prescription::where('patient_id', $patient->patient_id)
+            ->where('status', 'pending')
+            ->with('items.medicine')
+            ->first();
+
+        return view('billing.index', compact('patient', 'prescriptions'));
+    })->name('billing.show');
+
+    Route::post('/billing/{patient}', function(\Illuminate\Http\Request $request, \App\Models\Patient $patient) {
+        // Tandai resep sudah dispensed
+        $prescriptions = \App\Models\Prescription::where('patient_id', $patient->patient_id)
+            ->where('status', 'pending')
+            ->first();
+            
+        $prescriptionData = null;
+        if ($prescriptions) {
+            $prescriptionData = [];
+            foreach($prescriptions->items as $item) {
+                $medicine = $item->medicine;
+                if ($medicine) {
+                    $prescriptionData[] = [
+                        'name' => $medicine->name,
+                        'jumlah' => $item->jumlah,
+                        'harga' => $item->harga
+                    ];
+                    $medicine->decrement('stock', $item->jumlah);
+                }
+            }
+            $prescriptions->update(['status' => 'dispensed']);
+        }
+
+        // Simpan ke medical_histories sebelum di-reset
+        \App\Models\MedicalHistory::create([
+            'patient_id' => $patient->patient_id,
+            'gejala' => $patient->gejala,
+            'diagnosa' => $patient->diagnosa,
+            'tindakan' => $patient->tindakan,
+            'harga' => $patient->harga,
+            'prescription_data' => $prescriptionData,
+            'created_at' => $patient->updated_at ?? now(), // Waktu selesainya kunjungan ini
+        ]);
+
+        // Proses update status jadi completed
+        $patient->update([
+            'status' => 'completed'
+        ]);
+
+        return redirect()->route('dashboard')->with('success', 'Pembayaran pasien berhasil diselesaikan!');
+    })->name('billing.store');
+
     Route::post('/patients', function(\Illuminate\Http\Request $request) {
         $request->validate([
             'name' => 'required|string|max:255',
@@ -187,7 +243,31 @@ Route::middleware('auth')->group(function () {
 
         return back()->with('success', 'Data Pasien ' . $request->name . ' Berhasil Disimpan!');
     })->name('patients.store');
-    
+
+    Route::post('/patients/{patient}/new-visit', function(\App\Models\Patient $patient) {
+        if ($patient->status === 'waiting' || $patient->status === 'in_progress' || $patient->status === 'checked') {
+            return back()->with('error', 'Pasien ini masih dalam antrean aktif!');
+        }
+
+        $patient->update([
+            'status' => 'waiting',
+            'gejala' => null,
+            'tindakan' => null,
+            'diagnosa' => null,
+            'harga' => null,
+            'created_at' => now(), // Memperbarui timestamp agar masuk ke antrean hari ini
+        ]);
+
+        return redirect()->route('dashboard')->with('success', 'Kunjungan baru untuk pasien ' . $patient->name . ' berhasil dibuat dan masuk antrean!');
+    })->name('patients.new_visit');
+
+    Route::get('/patients/{patient}', function(\App\Models\Patient $patient) {
+        $histories = \App\Models\MedicalHistory::where('patient_id', $patient->patient_id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+        return view('patients.show', compact('patient', 'histories'));
+    })->name('patients.show');
+
     Route::get('/billing', function() { return view('billing.index'); })->name('billing.index');
     Route::get('/stock', function() { return view('stock.index'); })->name('stock.index');
 

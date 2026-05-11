@@ -200,14 +200,9 @@
                         </td>
                         <td class="py-5 px-2 text-right">
                             @if($patient->status === 'checked')
-                            <form action="{{ route('patients.update_status', $patient) }}" method="POST" class="inline">
-                                @csrf
-                                @method('PATCH')
-                                <input type="hidden" name="status" value="completed">
-                                <button type="submit" class="bg-[#10B981] hover:bg-[#059669] text-white text-[11px] font-[900] px-4 py-2 rounded-[8px] transition-colors shadow-sm uppercase tracking-wide">
-                                    Bayar Tagihan
-                                </button>
-                            </form>
+                            <a href="{{ route('billing.show', $patient) }}" class="bg-[#10B981] hover:bg-[#059669] text-white text-[11px] font-[900] px-4 py-2 rounded-[8px] transition-colors shadow-sm uppercase tracking-wide inline-block">
+                                Proses Pembayaran
+                            </a>
                             @else
                                 <span class="text-gray-300">-</span>
                             @endif

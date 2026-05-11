@@ -80,8 +80,11 @@
                         <p class="text-[12px] font-[900] text-gray-500 uppercase tracking-widest mb-6">Generate Nomor Urut :</p>
                         <div class="flex items-start gap-16">
                             <div class="flex flex-col">
-                                <span class="text-[13px] font-extrabold text-[#0A3D74] mb-2">No. Urut Antrian</span>
-                                <span class="text-[64px] font-[900] text-[#6A9DF6] leading-none tracking-tighter drop-shadow-sm" style="font-family: 'Inter', sans-serif;">{{ \App\Models\Patient::count() + 1024 }}</span>
+                                <span class="text-[13px] font-extrabold text-[#0A3D74] mb-2">No. Urut Antrian Hari Ini</span>
+                                @php
+                                    $todayCount = \App\Models\Patient::whereDate('created_at', \Carbon\Carbon::today())->count() + 1;
+                                @endphp
+                                <span class="text-[64px] font-[900] text-[#6A9DF6] leading-none tracking-tighter drop-shadow-sm" style="font-family: 'Inter', sans-serif;">{{ $todayCount }}</span>
                             </div>
                             <div class="grid grid-cols-3 gap-x-12 gap-y-6 pt-2">
                                 <div class="flex flex-col">
@@ -155,10 +158,19 @@
                                                     <span class="text-[12px] font-bold text-gray-500 mt-0.5">NIK: {{ $patient->nik }} &nbsp;|&nbsp; HP: {{ $patient->phone ?? '-' }}</span>
                                                 </div>
                                             </div>
-                                            <button class="bg-[#6A9DF6] hover:bg-[#0A3D74] text-white font-[900] text-[12px] px-6 py-2.5 rounded-[10px] transition-colors shadow-sm tracking-widest uppercase flex items-center gap-2">
-                                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                                                Buat Kunjungan
-                                            </button>
+                                            <div class="flex gap-2">
+                                                <a href="{{ route('patients.show', $patient) }}" class="bg-gray-100 hover:bg-[#0A3D74] hover:text-white text-gray-600 font-[900] text-[12px] px-4 py-2.5 rounded-[10px] transition-colors shadow-sm tracking-widest uppercase flex items-center gap-2">
+                                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                                    Riwayat
+                                                </a>
+                                                <form action="{{ route('patients.new_visit', $patient) }}" method="POST">
+                                                    @csrf
+                                                    <button type="submit" class="bg-[#6A9DF6] hover:bg-[#0A3D74] text-white font-[900] text-[12px] px-6 py-2.5 rounded-[10px] transition-colors shadow-sm tracking-widest uppercase flex items-center gap-2">
+                                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                                                        Buat Kunjungan
+                                                    </button>
+                                                </form>
+                                            </div>
                                         </div>
                                     @endforeach
                                 </div>
