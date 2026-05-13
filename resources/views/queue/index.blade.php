@@ -143,9 +143,9 @@
                             </td>
                             <td class="py-5 px-2 text-right">
                                 @if($s['btn'] !== '-')
-                                <button class="bg-[#6A9DF6] hover:bg-[#0A3D74] text-white font-[800] text-[11px] px-5 py-2.5 rounded-[10px] transition-colors shadow-sm tracking-widest uppercase">
+                                <a href="{{ route('patients.show', $patient) }}" class="bg-[#6A9DF6] hover:bg-[#0A3D74] text-white font-[800] text-[11px] px-5 py-2.5 rounded-[10px] transition-colors shadow-sm tracking-widest uppercase">
                                     {{ $s['btn'] }}
-                                </button>
+                                </a>
                                 @else
                                 <span class="text-gray-300">-</span>
                                 @endif

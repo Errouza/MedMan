@@ -9,6 +9,9 @@ Route::get('/', function () {
 });
 
 Route::get('/dashboard', function () {
+    if (Auth::user()->role === 'doctor') {
+        return redirect()->route('patients.index');
+    }
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
@@ -30,13 +33,12 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     
-    // Rute untuk Admin & Dokter (Pasien)
+    // Rute untuk Admin & Dokter (Shared tapi berbeda logika di dalam)
     Route::get('/patients', function(\Illuminate\Http\Request $request) { 
         $query = \App\Models\Patient::query();
         $searchPerformed = false;
         
         if (Auth::user()->role === 'admin') {
-            // Admin logic: search all patients
             if ($request->filled('search_name') || $request->filled('search_nik')) {
                 $searchPerformed = true;
                 if ($request->filled('search_name')) {
@@ -47,7 +49,6 @@ Route::middleware('auth')->group(function () {
                 }
             }
         } else {
-            // Doctor logic: only show patients who registered today and are waiting for treatment or in progress
             $query->whereDate('created_at', \Carbon\Carbon::today())
                   ->whereIn('status', ['waiting', 'in_progress']);
         }
@@ -56,7 +57,18 @@ Route::middleware('auth')->group(function () {
         return view('patients.index', compact('patients', 'searchPerformed')); 
     })->name('patients.index');
 
+    Route::get('/patients/{patient}', function(\App\Models\Patient $patient) {
+        $histories = \App\Models\MedicalHistory::where('patient_id', $patient->patient_id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+        return view('patients.show', compact('patient', 'histories'));
+    })->name('patients.show');
+
+    // ==========================================
+    // RUTE KHUSUS DOKTER
+    // ==========================================
     Route::patch('/patients/{patient}/status', function(\Illuminate\Http\Request $request, \App\Models\Patient $patient) {
+        if (Auth::user()->role !== 'doctor') abort(403, 'Akses ditolak. Khusus Dokter.');
         $request->validate(['status' => 'required|in:waiting,in_progress,checked,completed']);
         $patient->update(['status' => $request->status]);
         
@@ -67,6 +79,7 @@ Route::middleware('auth')->group(function () {
     })->name('patients.update_status');
 
     Route::get('/patients/{patient}/diagnose', function(\App\Models\Patient $patient) {
+        if (Auth::user()->role !== 'doctor') abort(403, 'Akses ditolak. Khusus Dokter.');
         if ($patient->status !== 'in_progress') {
             return redirect()->route('patients.index')->with('error', 'Pasien belum atau sudah diperiksa.');
         }
@@ -74,6 +87,7 @@ Route::middleware('auth')->group(function () {
     })->name('patients.diagnose');
 
     Route::patch('/patients/{patient}/diagnose', function(\Illuminate\Http\Request $request, \App\Models\Patient $patient) {
+        if (Auth::user()->role !== 'doctor') abort(403, 'Akses ditolak. Khusus Dokter.');
         $request->validate([
             'gejala' => 'required|string',
             'diagnosa' => 'required|string',
@@ -100,7 +114,7 @@ Route::middleware('auth')->group(function () {
                 
                 $medicine = \App\Models\Medicine::firstOrCreate(
                     ['name' => $medicineName],
-                    ['stock' => 50, 'price' => 15000] // Default value jika obat baru
+                    ['stock' => 50, 'price' => 15000]
                 );
                 
                 \App\Models\PrescriptionItem::create([
@@ -116,8 +130,8 @@ Route::middleware('auth')->group(function () {
         return redirect()->route('patients.index')->with('success', 'Pemeriksaan dan resep obat pasien berhasil disimpan!');
     })->name('patients.diagnose.update');
 
-    // Rute Tambahan Navigasi Dokter
     Route::get('/pelayanan', function() {
+        if (Auth::user()->role !== 'doctor') abort(403, 'Akses ditolak. Khusus Dokter.');
         $patient = \App\Models\Patient::where('status', 'in_progress')->whereDate('created_at', \Carbon\Carbon::today())->first();
         if ($patient) {
             return redirect()->route('patients.diagnose', $patient);
@@ -126,22 +140,24 @@ Route::middleware('auth')->group(function () {
     })->name('pelayanan.index');
 
     Route::get('/prescriptions', function() {
+        if (Auth::user()->role !== 'doctor') abort(403, 'Akses ditolak. Khusus Dokter.');
         $patients = \App\Models\Patient::whereIn('status', ['waiting', 'in_progress', 'checked'])->get();
         return view('prescriptions.index', compact('patients'));
     })->name('prescriptions.index');
 
     Route::post('/prescriptions', function(\Illuminate\Http\Request $request) {
-        // Untuk sementara redirect kembali dengan pesan sukses
-        // Logika database resep dan item resep akan ditambahkan di sini
-        return back()->with('success', 'Resep berhasil dibuat dan ditandatangani! (Sistem Database sedang disiapkan)');
+        if (Auth::user()->role !== 'doctor') abort(403, 'Akses ditolak. Khusus Dokter.');
+        return back()->with('success', 'Resep berhasil dibuat dan ditandatangani!');
     })->name('prescriptions.store');
 
     Route::get('/certificates', function() {
+        if (Auth::user()->role !== 'doctor') abort(403, 'Akses ditolak. Khusus Dokter.');
         $patients = \App\Models\Patient::whereIn('status', ['waiting', 'in_progress', 'checked'])->get();
         return view('certificates.index', compact('patients'));
     })->name('certificates.index');
 
     Route::post('/certificates', function(\Illuminate\Http\Request $request) {
+        if (Auth::user()->role !== 'doctor') abort(403, 'Akses ditolak. Khusus Dokter.');
         $request->validate([
             'patient_id' => 'required|exists:patients,patient_id',
             'type' => 'required|in:sekolah,kerja',
@@ -162,8 +178,72 @@ Route::middleware('auth')->group(function () {
         return back()->with('success', 'Surat Keterangan Sakit berhasil dibuat!');
     })->name('certificates.store');
 
-    // Fitur Pembayaran (Billing)
+    Route::get('/medical-records', function() { 
+        if (Auth::user()->role !== 'doctor') abort(403, 'Akses ditolak. Khusus Dokter.');
+        return view('records.index'); 
+    })->name('records.index');
+
+    // ==========================================
+    // RUTE KHUSUS ADMIN
+    // ==========================================
+    Route::get('/queue', function() { 
+        if (Auth::user()->role !== 'admin') abort(403, 'Akses ditolak. Khusus Administrator.');
+        $patients = \App\Models\Patient::latest()->get();
+        return view('queue.index', compact('patients')); 
+    })->name('queue.index');
+
+    Route::post('/patients', function(\Illuminate\Http\Request $request) {
+        if (Auth::user()->role !== 'admin') abort(403, 'Akses ditolak. Khusus Administrator.');
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'nik' => 'required|string|size:16|unique:patients,nik',
+            'phone' => 'required|string|min:10',
+            'address' => 'nullable|string|max:500',
+            'birth_date' => 'nullable|date',
+            'gejala' => 'nullable|string|max:1000',
+            'tindakan' => 'nullable|string|max:1000',
+        ]);
+
+        \App\Models\Patient::create([
+            'medical_record_number' => 'RM' . date('YmdHis'),
+            'name' => $request->name,
+            'nik' => $request->nik,
+            'phone' => $request->phone,
+            'address' => $request->address,
+            'birth_date' => $request->birth_date,
+            'gejala' => $request->gejala,
+            'tindakan' => $request->tindakan,
+            'status' => 'waiting',
+        ]);
+
+        return back()->with('success', 'Data Pasien ' . $request->name . ' Berhasil Disimpan!');
+    })->name('patients.store');
+
+    Route::post('/patients/{patient}/new-visit', function(\App\Models\Patient $patient) {
+        if (Auth::user()->role !== 'admin') abort(403, 'Akses ditolak. Khusus Administrator.');
+        if ($patient->status === 'waiting' || $patient->status === 'in_progress' || $patient->status === 'checked') {
+            return back()->with('error', 'Pasien ini masih dalam antrean aktif!');
+        }
+
+        $patient->update([
+            'status' => 'waiting',
+            'gejala' => null,
+            'tindakan' => null,
+            'diagnosa' => null,
+            'harga' => null,
+            'created_at' => now(), 
+        ]);
+
+        return redirect()->route('dashboard')->with('success', 'Kunjungan baru untuk pasien ' . $patient->name . ' berhasil dibuat dan masuk antrean!');
+    })->name('patients.new_visit');
+
+    Route::get('/billing', function() { 
+        if (Auth::user()->role !== 'admin') abort(403, 'Akses ditolak. Khusus Administrator.');
+        return view('billing.index'); 
+    })->name('billing.index');
+
     Route::get('/billing/{patient}', function(\App\Models\Patient $patient) {
+        if (Auth::user()->role !== 'admin') abort(403, 'Akses ditolak. Khusus Administrator.');
         if ($patient->status !== 'checked' && $patient->status !== 'completed') {
             return redirect()->route('dashboard')->with('error', 'Pasien belum selesai diperiksa.');
         }
@@ -177,7 +257,7 @@ Route::middleware('auth')->group(function () {
     })->name('billing.show');
 
     Route::post('/billing/{patient}', function(\Illuminate\Http\Request $request, \App\Models\Patient $patient) {
-        // Tandai resep sudah dispensed
+        if (Auth::user()->role !== 'admin') abort(403, 'Akses ditolak. Khusus Administrator.');
         $prescriptions = \App\Models\Prescription::where('patient_id', $patient->patient_id)
             ->where('status', 'pending')
             ->first();
@@ -199,7 +279,6 @@ Route::middleware('auth')->group(function () {
             $prescriptions->update(['status' => 'dispensed']);
         }
 
-        // Simpan ke medical_histories sebelum di-reset
         \App\Models\MedicalHistory::create([
             'patient_id' => $patient->patient_id,
             'gejala' => $patient->gejala,
@@ -207,10 +286,9 @@ Route::middleware('auth')->group(function () {
             'tindakan' => $patient->tindakan,
             'harga' => $patient->harga,
             'prescription_data' => $prescriptionData,
-            'created_at' => $patient->updated_at ?? now(), // Waktu selesainya kunjungan ini
+            'created_at' => $patient->updated_at ?? now(), 
         ]);
 
-        // Proses update status jadi completed
         $patient->update([
             'status' => 'completed'
         ]);
@@ -218,65 +296,11 @@ Route::middleware('auth')->group(function () {
         return redirect()->route('dashboard')->with('success', 'Pembayaran pasien berhasil diselesaikan!');
     })->name('billing.store');
 
-    Route::post('/patients', function(\Illuminate\Http\Request $request) {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'nik' => 'required|string|size:16|unique:patients,nik',
-            'phone' => 'required|string|min:10',
-            'address' => 'nullable|string|max:500',
-            'birth_date' => 'nullable|date',
-            'gejala' => 'nullable|string|max:1000',
-            'tindakan' => 'nullable|string|max:1000',
-        ]);
+    Route::get('/stock', function() { 
+        if (Auth::user()->role !== 'admin') abort(403, 'Akses ditolak. Khusus Administrator.');
+        return view('stock.index'); 
+    })->name('stock.index');
 
-        \App\Models\Patient::create([
-            'medical_record_number' => 'RM' . date('YmdHis'),
-            'name' => $request->name,
-            'nik' => $request->nik,
-            'phone' => $request->phone,
-            'address' => $request->address,
-            'birth_date' => $request->birth_date,
-            'gejala' => $request->gejala,
-            'tindakan' => $request->tindakan,
-            'status' => 'waiting', // Default status saat mendaftar
-        ]);
-
-        return back()->with('success', 'Data Pasien ' . $request->name . ' Berhasil Disimpan!');
-    })->name('patients.store');
-
-    Route::post('/patients/{patient}/new-visit', function(\App\Models\Patient $patient) {
-        if ($patient->status === 'waiting' || $patient->status === 'in_progress' || $patient->status === 'checked') {
-            return back()->with('error', 'Pasien ini masih dalam antrean aktif!');
-        }
-
-        $patient->update([
-            'status' => 'waiting',
-            'gejala' => null,
-            'tindakan' => null,
-            'diagnosa' => null,
-            'harga' => null,
-            'created_at' => now(), // Memperbarui timestamp agar masuk ke antrean hari ini
-        ]);
-
-        return redirect()->route('dashboard')->with('success', 'Kunjungan baru untuk pasien ' . $patient->name . ' berhasil dibuat dan masuk antrean!');
-    })->name('patients.new_visit');
-
-    Route::get('/patients/{patient}', function(\App\Models\Patient $patient) {
-        $histories = \App\Models\MedicalHistory::where('patient_id', $patient->patient_id)
-            ->orderBy('created_at', 'desc')
-            ->get();
-        return view('patients.show', compact('patient', 'histories'));
-    })->name('patients.show');
-
-    Route::get('/billing', function() { return view('billing.index'); })->name('billing.index');
-    Route::get('/stock', function() { return view('stock.index'); })->name('stock.index');
-
-    // Rute untuk Doctor
-    Route::get('/queue', function() { 
-        $patients = \App\Models\Patient::latest()->get();
-        return view('queue.index', compact('patients')); 
-    })->name('queue.index');
-    Route::get('/medical-records', function() { return view('records.index'); })->name('records.index');
 });
 
 require __DIR__.'/auth.php';
