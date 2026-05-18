@@ -71,6 +71,43 @@
                                         {{ $message }}
                                     </p>
                                 @enderror
+
+                                <div class="flex flex-col gap-1.5 w-full mt-1">
+                                    <label class="text-[13px] font-extrabold text-[#0A3D74]">Jenis Kelamin</label>
+                                    <div class="flex gap-4 mt-1">
+                                        <label class="flex items-center gap-2 cursor-pointer group">
+                                            <input type="radio" name="gender" value="Laki-laki" {{ old('gender') == 'Laki-laki' ? 'checked' : '' }} class="w-4 h-4 accent-[#0A3D74] cursor-pointer">
+                                            <span class="text-[14px] font-bold text-gray-700 group-hover:text-[#0A3D74] transition-colors">
+                                                <svg class="w-4 h-4 inline text-[#6A9DF6] mr-1" fill="currentColor" viewBox="0 0 24 24"><path d="M9 9c0-2.21 1.79-4 4-4s4 1.79 4 4-1.79 4-4 4-4-1.79-4-4zm0 0"/><path d="M17.66 4.34C16.18 2.86 14.18 2 12 2 7.58 2 4 5.58 4 10c0 3.54 2.29 6.53 5.46 7.59L8 20h2v2h2v-2h2v-2h2l-1.46-2.41C17.71 16.53 20 13.54 20 10c0-2.18-.86-4.18-2.34-5.66zM6 10c0-3.31 2.69-6 6-6s6 2.69 6 6-2.69 6-6 6-6-2.69-6-6z"/></svg>
+                                                Laki-laki
+                                            </span>
+                                        </label>
+                                        <label class="flex items-center gap-2 cursor-pointer group">
+                                            <input type="radio" name="gender" value="Perempuan" {{ old('gender') == 'Perempuan' ? 'checked' : '' }} class="w-4 h-4 accent-[#0A3D74] cursor-pointer">
+                                            <span class="text-[14px] font-bold text-gray-700 group-hover:text-[#0A3D74] transition-colors">
+                                                <svg class="w-4 h-4 inline text-pink-400 mr-1" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C9.24 2 7 4.24 7 7s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zm0 8c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm1 2h-2v3H8v2h3v3h2v-3h3v-2h-3v-3z"/></svg>
+                                                Perempuan
+                                            </span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="flex flex-col gap-1.5 w-full mt-2">
+                                    <label class="text-[13px] font-extrabold text-[#0A3D74]">Pekerjaan</label>
+                                    <select name="occupation" class="w-full border-[2px] border-gray-200 rounded-[12px] px-4 py-2.5 text-[14px] text-gray-800 font-bold focus:border-[#6A9DF6] focus:ring-0 bg-white transition-colors">
+                                        <option value="" disabled {{ old('occupation') ? '' : 'selected' }}>Pilih Pekerjaan</option>
+                                        <option value="PNS / ASN" {{ old('occupation') == 'PNS / ASN' ? 'selected' : '' }}>PNS / ASN</option>
+                                        <option value="TNI / Polri" {{ old('occupation') == 'TNI / Polri' ? 'selected' : '' }}>TNI / Polri</option>
+                                        <option value="Pegawai Swasta" {{ old('occupation') == 'Pegawai Swasta' ? 'selected' : '' }}>Pegawai Swasta</option>
+                                        <option value="Wiraswasta" {{ old('occupation') == 'Wiraswasta' ? 'selected' : '' }}>Wiraswasta</option>
+                                        <option value="Petani / Nelayan" {{ old('occupation') == 'Petani / Nelayan' ? 'selected' : '' }}>Petani / Nelayan</option>
+                                        <option value="Pelajar / Mahasiswa" {{ old('occupation') == 'Pelajar / Mahasiswa' ? 'selected' : '' }}>Pelajar / Mahasiswa</option>
+                                        <option value="Ibu Rumah Tangga" {{ old('occupation') == 'Ibu Rumah Tangga' ? 'selected' : '' }}>Ibu Rumah Tangga</option>
+                                        <option value="Pensiunan" {{ old('occupation') == 'Pensiunan' ? 'selected' : '' }}>Pensiunan</option>
+                                        <option value="Tidak Bekerja" {{ old('occupation') == 'Tidak Bekerja' ? 'selected' : '' }}>Tidak Bekerja</option>
+                                        <option value="Lainnya" {{ old('occupation') == 'Lainnya' ? 'selected' : '' }}>Lainnya</option>
+                                    </select>
+                                </div>
                             </div>
                         </div>
                     </form>

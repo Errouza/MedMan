@@ -5,30 +5,34 @@
         <div class="grid grid-cols-1 xl:grid-cols-12 gap-6 w-full">
             
             <!-- Left Card: Stats -->
-            <div class="xl:col-span-6 bg-white rounded-[24px] shadow-[0_0_15px_rgba(0,0,0,0.02)] border border-gray-100 p-8 flex justify-around items-center h-[200px]">
-                <div class="flex flex-col items-center justify-center">
-                    <span class="text-[16px] font-[900] text-black mb-1">Jumlah Pasien Hari ini</span>
-                    <span class="text-[75px] font-[900] text-[#6A9DF6] leading-none tracking-tighter" style="font-family: 'Inter', sans-serif;">{{ \App\Models\Patient::whereDate('created_at', \Carbon\Carbon::today())->count() }}</span>
+            <div class="xl:col-span-6 bg-white rounded-[24px] shadow-[0_0_15px_rgba(0,0,0,0.02)] border border-gray-100 p-8 flex flex-col sm:flex-row justify-around items-center min-h-[200px] gap-6 sm:gap-2">
+                <div class="flex flex-col items-center justify-center text-center">
+                    <span class="text-[14px] sm:text-[16px] font-[900] text-black mb-1">Jumlah Pasien Hari ini</span>
+                    <span class="text-[60px] sm:text-[75px] font-[900] text-[#6A9DF6] leading-none tracking-tighter" style="font-family: 'Inter', sans-serif;">{{ \App\Models\Patient::whereDate('created_at', \Carbon\Carbon::today())->count() }}</span>
                 </div>
-                <div class="flex flex-col items-center justify-center">
-                    <span class="text-[16px] font-[900] text-black mb-1">Total Antrian Sistem</span>
-                    <span class="text-[75px] font-[900] text-[#6A9DF6] leading-none tracking-tighter" style="font-family: 'Inter', sans-serif;">{{ \App\Models\Patient::count() }}</span>
+                <!-- Divider for sm and up -->
+                <div class="hidden sm:block w-[2px] h-20 bg-gray-100"></div>
+                <!-- Divider for mobile -->
+                <div class="block sm:hidden w-full h-[2px] bg-gray-100"></div>
+                <div class="flex flex-col items-center justify-center text-center">
+                    <span class="text-[14px] sm:text-[16px] font-[900] text-black mb-1">Total Antrian Sistem</span>
+                    <span class="text-[60px] sm:text-[75px] font-[900] text-[#6A9DF6] leading-none tracking-tighter" style="font-family: 'Inter', sans-serif;">{{ \App\Models\Patient::count() }}</span>
                 </div>
             </div>
 
             <!-- Right Card: Calendar/Mini Table -->
-            <div class="xl:col-span-6 bg-white rounded-[24px] shadow-[0_0_15px_rgba(0,0,0,0.02)] border border-gray-100 p-8 flex items-center gap-8 h-[200px]">
+            <div class="xl:col-span-6 bg-white rounded-[24px] shadow-[0_0_15px_rgba(0,0,0,0.02)] border border-gray-100 p-8 flex flex-col sm:flex-row items-center gap-8 min-h-[200px]">
                 <!-- Calendar Widget -->
-                <div class="flex flex-col items-center justify-center w-24">
+                <div class="flex flex-col items-center justify-center w-24 shrink-0">
                     <!-- Blue Box -->
-                    <div class="bg-[#6A9DF6] text-white rounded-md w-[50px] h-[60px] flex flex-col items-center justify-center overflow-hidden shadow-sm">
-                        <span class="text-[10px] font-bold lowercase mt-1">{{ now()->format('D') }}</span>
-                        <span class="text-[32px] font-bold leading-none mb-1">{{ now()->format('j') }}</span>
+                    <div class="bg-[#6A9DF6] text-white rounded-md w-[60px] h-[70px] flex flex-col items-center justify-center overflow-hidden shadow-sm">
+                        <span class="text-[11px] font-bold lowercase mt-1">{{ now()->format('D') }}</span>
+                        <span class="text-[36px] font-bold leading-none mb-1">{{ now()->format('j') }}</span>
                     </div>
-                    <span class="text-[11px] font-[900] text-black mt-2 text-center leading-tight">{{ now()->translatedFormat('F Y') }}</span>
+                    <span class="text-[11px] font-[900] text-black mt-2 text-center leading-tight whitespace-nowrap">{{ now()->translatedFormat('F Y') }}</span>
                     
                     <!-- Live Clock -->
-                    <span id="liveClock" class="text-[12px] font-black text-[#0A3D74] bg-[#EBF4FF] px-2 py-0.5 rounded-full mt-1 border border-[#6A9DF6] shadow-sm">
+                    <span id="liveClock" class="text-[12px] font-black text-[#0A3D74] bg-[#EBF4FF] px-3 py-1 rounded-full mt-1.5 border border-[#6A9DF6]/30 shadow-sm whitespace-nowrap">
                         {{ now()->format('H:i:s') }}
                     </span>
                     
@@ -45,23 +49,23 @@
                 </div>
                 
                 <!-- Mini Table -->
-                <div class="flex-1 max-w-[300px]">
-                    <div class="w-full bg-white">
+                <div class="flex-1 w-full overflow-x-auto">
+                    <div class="w-full bg-white min-w-[250px]">
                         <table class="w-full border-collapse border border-gray-300">
                             <thead>
                                 <tr>
-                                    <th class="bg-[#6A9DF6] border border-gray-300 h-7 px-3 text-white text-left font-extrabold text-[10px] uppercase tracking-wider">Tanggal & Jam</th>
-                                    <th class="bg-[#6A9DF6] border border-gray-300 h-7 px-3 text-white text-left font-extrabold text-[10px] uppercase tracking-wider">Jadwal Dokter</th>
+                                    <th class="bg-[#6A9DF6] border border-gray-300 h-8 px-3 text-white text-left font-extrabold text-[10px] uppercase tracking-wider whitespace-nowrap">Tanggal & Jam</th>
+                                    <th class="bg-[#6A9DF6] border border-gray-300 h-8 px-3 text-white text-left font-extrabold text-[10px] uppercase tracking-wider whitespace-nowrap">Jadwal Dokter</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td class="border border-gray-300 h-7 px-3 text-[10px] text-gray-700 font-bold">{{ now()->translatedFormat('d F Y') }} <span class="text-blue-500">(08:00 - 13:00)</span></td>
-                                    <td class="border border-gray-300 h-7 px-3 text-[10px] text-[#0A3D74] font-extrabold">{{ Auth::user()->name ?? 'dr. Andini (Sesi Pagi)' }}</td>
+                                    <td class="border border-gray-300 h-8 px-3 text-[10px] text-gray-700 font-bold whitespace-nowrap">{{ now()->translatedFormat('d F Y') }} <span class="text-blue-500">(08:00 - 13:00)</span></td>
+                                    <td class="border border-gray-300 h-8 px-3 text-[10px] text-[#0A3D74] font-extrabold whitespace-nowrap">{{ Auth::user()->name ?? 'dr. Andini (Sesi Pagi)' }}</td>
                                 </tr>
                                 <tr>
-                                    <td class="border border-gray-300 h-7 px-3 text-[10px] text-gray-700 font-bold">{{ now()->translatedFormat('d F Y') }} <span class="text-blue-500">(16:00 - 21:00)</span></td>
-                                    <td class="border border-gray-300 h-7 px-3 text-[10px] text-[#0A3D74] font-extrabold">{{ Auth::user()->name ?? 'dr. Andini (Sesi Malam)' }}</td>
+                                    <td class="border border-gray-300 h-8 px-3 text-[10px] text-gray-700 font-bold whitespace-nowrap">{{ now()->translatedFormat('d F Y') }} <span class="text-blue-500">(16:00 - 21:00)</span></td>
+                                    <td class="border border-gray-300 h-8 px-3 text-[10px] text-[#0A3D74] font-extrabold whitespace-nowrap">{{ Auth::user()->name ?? 'dr. Andini (Sesi Malam)' }}</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -143,7 +147,7 @@
                             </td>
                             <td class="py-5 px-2 text-right">
                                 @if($s['btn'] !== '-')
-                                <a href="{{ route('patients.show', $patient) }}" class="bg-[#6A9DF6] hover:bg-[#0A3D74] text-white font-[800] text-[11px] px-5 py-2.5 rounded-[10px] transition-colors shadow-sm tracking-widest uppercase">
+                                <a href="{{ route('patients.show', $patient) }}" class="bg-[#6A9DF6] hover:bg-[#0A3D74] text-white font-[800] text-[11px] px-5 py-2.5 rounded-[10px] transition-colors shadow-sm tracking-widest uppercase whitespace-nowrap inline-block">
                                     {{ $s['btn'] }}
                                 </a>
                                 @else

@@ -13,6 +13,8 @@ class Patient extends Model
         'nik',
         'name',
         'birth_date',
+        'gender',
+        'occupation',
         'address',
         'phone',
         'gejala',

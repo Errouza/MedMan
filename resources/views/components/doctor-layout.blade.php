@@ -25,7 +25,7 @@
                 <!-- Logo placeholder -->
                 <div class="w-[70px] h-[70px] bg-white rounded-full shadow-md border border-gray-100 flex items-center justify-center p-1.5 shrink-0">
                     <div class="w-full h-full border-2 border-[#6A9DF6] rounded-full flex items-center justify-center bg-[#EBF4FF] text-[#0A3D74]">
-                        <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                        <img src="{{ asset('images/logoApotek.svg') }}" alt="Logo" class="w-full h-full object-cover">
                     </div>
                 </div>
                 <div class="flex flex-col">
@@ -33,18 +33,20 @@
                     <p class="text-[13px] font-bold text-gray-500 mt-1">Jl. Bubulak, Bogor Jawa Barat</p>
                 </div>
             </div>
-            
+
             <div class="flex items-center gap-6">
                 <div class="text-right flex flex-col">
                     <p class="text-[12px] font-extrabold text-gray-500">Selamat Datang,</p>
                     <p class="text-[16px] font-[900] text-black mt-0.5">{{ Auth::user()->name ?? 'dr. Andini Hurul Aini' }}</p>
                 </div>
-                
+
                 <!-- Logout Action -->
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
                     <button type="submit" class="w-10 h-10 bg-red-50 text-red-500 rounded-full flex items-center justify-center hover:bg-red-500 hover:text-white transition-colors shadow-sm" title="Keluar">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                        </svg>
                     </button>
                 </form>
             </div>
@@ -58,7 +60,7 @@
                 <a href="{{ route('patients.index') }}" class="{{ request()->routeIs('patients.index') ? 'bg-white border-t-[3px] border-[#6A9DF6] border-x border-gray-100 border-b-0 text-[#6A9DF6] pb-[13px] pt-3 px-8' : 'bg-[#6A9DF6] hover:bg-[#5b8ce0] text-white pb-2.5 pt-2.5 px-7 border border-transparent' }} rounded-t-[16px] font-[800] text-[14px] transition-all relative">
                     <!-- active tab mask for bottom border -->
                     @if(request()->routeIs('patients.index'))
-                        <div class="absolute -bottom-[2px] left-0 right-0 h-[3px] bg-white"></div>
+                    <div class="absolute -bottom-[2px] left-0 right-0 h-[3px] bg-white"></div>
                     @endif
                     Daftar Pasien
                 </a>
@@ -66,21 +68,21 @@
                 <a href="{{ route('pelayanan.index') }}" class="{{ request()->routeIs('patients.diagnose') || request()->routeIs('pelayanan.index') ? 'bg-white border-t-[3px] border-[#6A9DF6] border-x border-gray-100 border-b-0 text-[#6A9DF6] pb-[13px] pt-3 px-8' : 'bg-[#6A9DF6] hover:bg-[#5b8ce0] text-white pb-2.5 pt-2.5 px-7 border border-transparent' }} rounded-t-[16px] font-[800] text-[14px] transition-all relative">
                     <!-- active tab mask for bottom border -->
                     @if(request()->routeIs('patients.diagnose') || request()->routeIs('pelayanan.index'))
-                        <div class="absolute -bottom-[2px] left-0 right-0 h-[3px] bg-white"></div>
+                    <div class="absolute -bottom-[2px] left-0 right-0 h-[3px] bg-white"></div>
                     @endif
                     Pelayanan Pasien
                 </a>
                 <!-- Tab 3 -->
                 <a href="{{ route('prescriptions.index') }}" class="{{ request()->routeIs('prescriptions.index') ? 'bg-white border-t-[3px] border-[#6A9DF6] border-x border-gray-100 border-b-0 text-[#6A9DF6] pb-[13px] pt-3 px-8' : 'bg-[#6A9DF6] hover:bg-[#5b8ce0] text-white pb-2.5 pt-2.5 px-7 border border-transparent' }} rounded-t-[16px] font-[800] text-[14px] transition-all relative">
                     @if(request()->routeIs('prescriptions.index'))
-                        <div class="absolute -bottom-[2px] left-0 right-0 h-[3px] bg-white"></div>
+                    <div class="absolute -bottom-[2px] left-0 right-0 h-[3px] bg-white"></div>
                     @endif
                     Buat Resep
                 </a>
                 <!-- Tab 4 -->
                 <a href="{{ route('certificates.index') }}" class="{{ request()->routeIs('certificates.index') ? 'bg-white border-t-[3px] border-[#6A9DF6] border-x border-gray-100 border-b-0 text-[#6A9DF6] pb-[13px] pt-3 px-8' : 'bg-[#6A9DF6] hover:bg-[#5b8ce0] text-white pb-2.5 pt-2.5 px-7 border border-transparent' }} rounded-t-[16px] font-[800] text-[14px] transition-all relative">
                     @if(request()->routeIs('certificates.index'))
-                        <div class="absolute -bottom-[2px] left-0 right-0 h-[3px] bg-white"></div>
+                    <div class="absolute -bottom-[2px] left-0 right-0 h-[3px] bg-white"></div>
                     @endif
                     Surat Keterangan
                 </a>
@@ -93,4 +95,5 @@
         </div>
     </div>
 </body>
+
 </html>

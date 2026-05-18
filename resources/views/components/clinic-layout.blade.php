@@ -23,7 +23,7 @@
 
         <!-- Logo -->
         <div class="w-[60px] h-[60px] bg-white rounded-full flex items-center justify-center shadow-md overflow-hidden p-1 border-[3px] border-[#0A3D74] mb-6">
-            <image src="{{ asset('images/logoApotek.svg') }}" alt="Logo" class="w-full h-full object-cover">
+            <img src="{{ asset('images/logoApotek.svg') }}" alt="Logo Apotek Bubulak" class="w-full h-full object-cover">
         </div>
 
         <!-- Blue Sidebar Pill -->

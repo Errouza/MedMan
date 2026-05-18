@@ -1,6 +1,14 @@
 <x-doctor-layout>
-    <div class="w-full max-w-5xl mx-auto pb-20">
-        <h2 class="text-[28px] font-[900] text-[#6A9DF6] mb-8">Buat Surat Keterangan Sakit</h2>
+    <div class="w-full max-w-5xl mx-auto pb-20" x-data="{ jenisSurat: 'sakit' }">
+        
+        <div class="flex items-center justify-between mb-8">
+            <h2 class="text-[28px] font-[900] text-[#6A9DF6]" x-text="jenisSurat === 'sakit' ? 'Buat Surat Keterangan Sakit' : 'Buat Surat Keterangan Sehat'"></h2>
+            
+            <div class="flex items-center bg-white p-1 rounded-full border border-gray-200 shadow-sm">
+                <button @click="jenisSurat = 'sakit'" :class="jenisSurat === 'sakit' ? 'bg-[#0A3D74] text-white shadow-md' : 'text-gray-500 hover:text-[#0A3D74]'" class="px-6 py-2.5 rounded-full text-[13px] font-[900] transition-all">SK Sakit</button>
+                <button @click="jenisSurat = 'sehat'" :class="jenisSurat === 'sehat' ? 'bg-[#56C427] text-white shadow-md' : 'text-gray-500 hover:text-[#56C427]'" class="px-6 py-2.5 rounded-full text-[13px] font-[900] transition-all">SK Sehat</button>
+            </div>
+        </div>
 
         @if(session('success'))
         <div class="mb-8 p-4 bg-green-50 border-l-4 border-[#56C427] rounded-r-lg shadow-sm">
@@ -11,20 +19,21 @@
         </div>
         @endif
 
-        <form action="{{ route('certificates.store') }}" method="POST">
+        <!-- Form Surat Sakit -->
+        <form x-show="jenisSurat === 'sakit'" action="{{ route('certificates.store') }}" method="POST">
             @csrf
             
             <div class="bg-white rounded-[24px] border border-gray-200 shadow-sm overflow-hidden p-10 relative">
                 <!-- Kop Surat Dummy -->
                 <div class="border-b-[3px] border-black pb-6 mb-8 flex justify-between items-center">
                     <div class="flex items-center gap-4">
-                        <div class="w-16 h-16 bg-[#0A3D74] rounded-[16px] flex items-center justify-center text-white shadow-md">
-                            <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                        <div class="w-16 h-16 bg-white rounded-full border-[3px] border-[#0A3D74] flex items-center justify-center overflow-hidden shadow-md">
+                            <img src="{{ asset('images/logoApotek.svg') }}" alt="Logo Apotek Bubulak" class="w-full h-full object-cover">
                         </div>
                         <div>
-                            <h1 class="text-[24px] font-[900] text-[#0A3D74] tracking-tight">KLINIK MEDMAN</h1>
-                            <p class="text-[14px] font-bold text-gray-600">Jl. Kesehatan Medis No. 123, Kota Sehat Raya</p>
-                            <p class="text-[14px] font-bold text-gray-500">Telp: (021) 555-1234 | Email: info@medman.com</p>
+                            <h1 class="text-[20px] font-[900] text-[#0A3D74] tracking-tight uppercase leading-tight">PRAKTIK DOKTER MANDIRI<br><span class="text-[22px]">&ldquo;APOTEK BUBULAK&rdquo;</span></h1>
+                            <p class="text-[13px] font-bold text-gray-600">Jl. Bubulak, Bogor, Jawa Barat</p>
+                            <p class="text-[13px] font-bold text-gray-500">Telp: (0251) 555-1234 | Email: apotek.bubulak@gmail.com</p>
                         </div>
                     </div>
                 </div>
@@ -111,6 +120,115 @@
                         <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
                     </div>
                     Tanda Tangani & Terbitkan
+                </button>
+            </div>
+        </form>
+
+        <!-- Form Surat Sehat -->
+        <form x-show="jenisSurat === 'sehat'" action="{{ route('certificates.print_sehat') }}" method="POST" target="_blank" style="display: none;">
+            @csrf
+            
+            <div class="bg-white rounded-[24px] border border-gray-200 shadow-sm overflow-hidden p-10 relative">
+                <!-- Kop Surat Dummy -->
+                <div class="border-b-[3px] border-black pb-6 mb-8 flex justify-between items-center">
+                    <div class="flex items-center gap-4">
+                        <div class="w-16 h-16 bg-white rounded-full border-[3px] border-[#0A3D74] flex items-center justify-center overflow-hidden shadow-md">
+                            <img src="{{ asset('images/logoApotek.svg') }}" alt="Logo Apotek Bubulak" class="w-full h-full object-cover">
+                        </div>
+                        <div>
+                            <h1 class="text-[20px] font-[900] text-[#0A3D74] tracking-tight uppercase leading-tight">PRAKTIK DOKTER MANDIRI<br><span class="text-[22px]">&ldquo;APOTEK BUBULAK&rdquo;</span></h1>
+                            <p class="text-[13px] font-bold text-gray-600">Jl. Bubulak, Bogor, Jawa Barat</p>
+                            <p class="text-[13px] font-bold text-gray-500">Telp: (0251) 555-1234 | Email: apotek.bubulak@gmail.com</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="text-center mb-10">
+                    <h2 class="text-[22px] font-[900] text-black uppercase underline decoration-[3px] underline-offset-4">Surat Keterangan Sehat</h2>
+                </div>
+
+                <div class="space-y-8 px-4">
+                    <p class="text-[15px] font-bold text-gray-800 leading-relaxed">
+                        Yang bertanda tangan di bawah ini menerangkan dengan sesungguhnya bahwa:
+                    </p>
+
+                    <!-- Data Pasien -->
+                    <div class="grid grid-cols-[150px_1fr] items-center gap-4 bg-gray-50 p-6 rounded-[16px] border border-gray-100">
+                        <label class="text-[15px] font-[900] text-black">Nama Pasien</label>
+                        <select name="patient_id" class="w-full border-[2.5px] border-[#56C427] rounded-[12px] px-4 py-3 text-[15px] font-bold text-[#0A3D74] focus:ring-0 focus:border-[#4CAF21] appearance-none bg-white bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2356C427%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:14px_14px] bg-no-repeat bg-[position:right_1.2rem_center]" required>
+                            <option value="" disabled selected>Pilih Pasien...</option>
+                            @foreach($patients as $patient)
+                                <option value="{{ $patient->patient_id }}">{{ $patient->name }} (Usia: {{ \Carbon\Carbon::parse($patient->birth_date)->age }} Thn) - RM: {{ $patient->medical_record_number }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <p class="text-[15px] font-bold text-gray-800 leading-relaxed">
+                        Telah diperiksa kesehatannya pada hari ini, dengan hasil pemeriksaan fisik sebagai berikut:
+                    </p>
+
+                    <!-- Hasil Pemeriksaan -->
+                    <div class="grid grid-cols-2 gap-6 bg-green-50/50 p-6 rounded-[16px] border border-green-100">
+                        <div class="flex flex-col">
+                            <label class="text-[13px] font-[900] text-black mb-2">Tinggi Badan (cm)</label>
+                            <input type="number" name="tb" placeholder="Contoh: 170" class="w-full border-[2.5px] border-[#56C427] rounded-[12px] px-4 py-3 text-[15px] font-bold text-gray-800 focus:ring-0 focus:border-[#4CAF21]" required>
+                        </div>
+                        <div class="flex flex-col">
+                            <label class="text-[13px] font-[900] text-black mb-2">Berat Badan (kg)</label>
+                            <input type="number" name="bb" placeholder="Contoh: 65" class="w-full border-[2.5px] border-[#56C427] rounded-[12px] px-4 py-3 text-[15px] font-bold text-gray-800 focus:ring-0 focus:border-[#4CAF21]" required>
+                        </div>
+                        <div class="flex flex-col">
+                            <label class="text-[13px] font-[900] text-black mb-2">Tekanan Darah (mmHg)</label>
+                            <input type="text" name="td" placeholder="Contoh: 120/80" class="w-full border-[2.5px] border-[#56C427] rounded-[12px] px-4 py-3 text-[15px] font-bold text-gray-800 focus:ring-0 focus:border-[#4CAF21]" required>
+                        </div>
+                        <div class="flex flex-col">
+                            <label class="text-[13px] font-[900] text-black mb-2">Golongan Darah</label>
+                            <select name="goldar" class="w-full border-[2.5px] border-[#56C427] rounded-[12px] px-4 py-3 text-[15px] font-bold text-gray-800 focus:ring-0 focus:border-[#4CAF21]" required>
+                                <option value="A">A</option>
+                                <option value="B">B</option>
+                                <option value="AB">AB</option>
+                                <option value="O">O</option>
+                                <option value="-">Tidak Diketahui</option>
+                            </select>
+                        </div>
+                        <div class="flex flex-col col-span-2">
+                            <label class="text-[13px] font-[900] text-black mb-2">Tes Buta Warna</label>
+                            <select name="buta_warna" class="w-full border-[2.5px] border-[#56C427] rounded-[12px] px-4 py-3 text-[15px] font-bold text-gray-800 focus:ring-0 focus:border-[#4CAF21]" required>
+                                <option value="Normal">Normal (Tidak Buta Warna)</option>
+                                <option value="Buta Warna Parsial">Buta Warna Parsial</option>
+                                <option value="Buta Warna Total">Buta Warna Total</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-[150px_1fr] items-center gap-4 mt-6">
+                        <label class="text-[15px] font-[900] text-black">Hasil Akhir</label>
+                        <div>
+                            <select name="status_sehat" class="w-full border-[2.5px] border-[#56C427] rounded-[12px] px-4 py-3 text-[15px] font-bold text-green-700 focus:ring-0 focus:border-[#4CAF21] bg-green-50" required>
+                                <option value="SEHAT">Dinyatakan SEHAT</option>
+                                <option value="TIDAK SEHAT">Dinyatakan TIDAK SEHAT</option>
+                            </select>
+                        </div>
+                        
+                        <label class="text-[15px] font-[900] text-black mt-4">Untuk Keperluan</label>
+                        <div class="mt-4">
+                            <input type="text" name="keperluan" placeholder="Contoh: Melamar Pekerjaan / Mendaftar Sekolah" class="w-full border-[2.5px] border-[#56C427] rounded-[12px] px-4 py-3 text-[15px] font-bold text-gray-800 focus:ring-0 focus:border-[#4CAF21]" required>
+                        </div>
+                    </div>
+
+                    <p class="text-[15px] font-bold text-gray-800 leading-relaxed mt-4">
+                        Demikian surat keterangan ini dibuat dengan sebenarnya untuk dapat dipergunakan sebagaimana mestinya.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex items-center justify-between pt-8 mt-4">
+                <button type="submit" class="bg-[#56C427] hover:bg-[#4CAF21] text-white font-[900] text-[15px] px-10 py-3.5 rounded-full transition-colors shadow-lg tracking-wide flex items-center gap-3">
+                    <div class="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center">
+                        <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                    </div>
+                    Tanda Tangani & Cetak
                 </button>
             </div>
         </form>

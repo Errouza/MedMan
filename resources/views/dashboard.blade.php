@@ -144,8 +144,8 @@
                 </thead>
                 <tbody class="divide-y-[2px] divide-gray-50">
                     @php
-                        // Fetch today's patients for live queue
-                        $todayPatients = \App\Models\Patient::whereDate('created_at', \Carbon\Carbon::today())->latest()->get();
+                        // Fetch today's patients for live queue (FIFO order)
+                        $todayPatients = \App\Models\Patient::whereDate('created_at', \Carbon\Carbon::today())->oldest()->get();
                     @endphp
                     
                     @forelse($todayPatients as $index => $patient)
@@ -181,7 +181,7 @@
                     <tr class="hover:bg-blue-50/50 transition-colors group">
                         <td class="py-5 px-2">
                             <span class="w-8 h-8 rounded-full bg-[#EBF4FF] text-[#0A3D74] font-black text-[13px] flex items-center justify-center border border-[#6A9DF6]/30">
-                                {{ $todayPatients->count() - $index }}
+                                {{ $index + 1 }}
                             </span>
                         </td>
                         <td class="py-5 px-2">

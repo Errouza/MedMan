@@ -53,7 +53,7 @@ Route::middleware('auth')->group(function () {
                   ->whereIn('status', ['waiting', 'in_progress']);
         }
         
-        $patients = $query->latest()->get();
+        $patients = $query->oldest()->get();
         return view('patients.index', compact('patients', 'searchPerformed')); 
     })->name('patients.index');
 
@@ -83,7 +83,12 @@ Route::middleware('auth')->group(function () {
         if ($patient->status !== 'in_progress') {
             return redirect()->route('patients.index')->with('error', 'Pasien belum atau sudah diperiksa.');
         }
-        return view('patients.diagnose', compact('patient'));
+        
+        $histories = \App\Models\MedicalHistory::where('patient_id', $patient->patient_id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+            
+        return view('patients.diagnose', compact('patient', 'histories'));
     })->name('patients.diagnose');
 
     Route::patch('/patients/{patient}/diagnose', function(\Illuminate\Http\Request $request, \App\Models\Patient $patient) {
@@ -95,11 +100,29 @@ Route::middleware('auth')->group(function () {
             'harga' => 'required|numeric|min:0',
         ]);
         
+        $totalAlatMedis = 0;
+        
+        // Proses Alat Medis Habis Pakai (Langsung memotong stok dan menambah harga layanan)
+        if ($request->has('alat_medis') && is_array($request->alat_medis)) {
+            foreach ($request->alat_medis as $index => $medicineName) {
+                if (empty($medicineName)) continue;
+                $jumlah = $request->alat_jumlah[$index] ?? 1;
+                
+                $medicine = \App\Models\Medicine::firstOrCreate(
+                    ['name' => $medicineName],
+                    ['stock' => 50, 'price' => 10000] // Default value
+                );
+                
+                $totalAlatMedis += ($medicine->price * $jumlah);
+                $medicine->decrement('stock', $jumlah);
+            }
+        }
+        
         $patient->update([
             'gejala' => $request->gejala,
             'diagnosa' => $request->diagnosa,
             'tindakan' => $request->tindakan,
-            'harga' => $request->harga,
+            'harga' => $request->harga + $totalAlatMedis,
             'status' => 'checked',
         ]);
 
@@ -123,6 +146,7 @@ Route::middleware('auth')->group(function () {
                     'dosis' => $request->resep_dosis[$index] ?? '-',
                     'keterangan' => $request->resep_keterangan[$index] ?? '',
                     'jumlah' => $request->resep_jumlah[$index] ?? 1,
+                    'harga' => $medicine->price,
                 ]);
             }
         }
@@ -178,6 +202,28 @@ Route::middleware('auth')->group(function () {
         return back()->with('success', 'Surat Keterangan Sakit berhasil dibuat!');
     })->name('certificates.store');
 
+    Route::post('/certificates/print-sehat', function(\Illuminate\Http\Request $request) {
+        if (Auth::user()->role !== 'doctor') abort(403, 'Akses ditolak. Khusus Dokter.');
+        $request->validate([
+            'patient_id' => 'required|exists:patients,patient_id',
+            'keperluan' => 'required|string',
+            'tb' => 'required|numeric',
+            'bb' => 'required|numeric',
+            'td' => 'required|string',
+            'goldar' => 'required|string',
+            'buta_warna' => 'required|string',
+            'status_sehat' => 'required|string',
+        ]);
+        
+        $patient = \App\Models\Patient::where('patient_id', $request->patient_id)->firstOrFail();
+        
+        return view('certificates.print_sehat', [
+            'patient' => $patient,
+            'data' => $request->all(),
+            'doctor' => Auth::user()
+        ]);
+    })->name('certificates.print_sehat');
+
     Route::get('/medical-records', function() { 
         if (Auth::user()->role !== 'doctor') abort(403, 'Akses ditolak. Khusus Dokter.');
         return view('records.index'); 
@@ -194,21 +240,52 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/patients', function(\Illuminate\Http\Request $request) {
         if (Auth::user()->role !== 'admin') abort(403, 'Akses ditolak. Khusus Administrator.');
+        
         $request->validate([
             'name' => 'required|string|max:255',
-            'nik' => 'required|string|size:16|unique:patients,nik',
+            'nik' => 'required|string|size:16',
             'phone' => 'required|string|min:10',
+            'gender' => 'nullable|string|in:Laki-laki,Perempuan',
+            'occupation' => 'nullable|string|max:255',
             'address' => 'nullable|string|max:500',
             'birth_date' => 'nullable|date',
             'gejala' => 'nullable|string|max:1000',
             'tindakan' => 'nullable|string|max:1000',
         ]);
 
+        $existingPatient = \App\Models\Patient::where('nik', $request->nik)->first();
+
+        if ($existingPatient) {
+            $isToday = $existingPatient->created_at->isToday();
+            if ($isToday && in_array($existingPatient->status, ['waiting', 'in_progress'])) {
+                return back()->with('error', 'Pasien dengan NIK ini sudah berada dalam antrean aktif hari ini!');
+            }
+
+            $existingPatient->status = 'waiting';
+            $existingPatient->gejala = $request->gejala;
+            $existingPatient->tindakan = $request->tindakan;
+            $existingPatient->diagnosa = null;
+            $existingPatient->harga = null;
+            $existingPatient->created_at = now();
+            // Update profile just in case it changed
+            $existingPatient->name = $request->name;
+            $existingPatient->phone = $request->phone;
+            $existingPatient->gender = $request->gender;
+            $existingPatient->occupation = $request->occupation;
+            $existingPatient->address = $request->address;
+            $existingPatient->birth_date = $request->birth_date;
+            $existingPatient->save();
+
+            return back()->with('success', 'Data Pasien Lama dikenali. Kunjungan baru untuk ' . $existingPatient->name . ' berhasil ditambahkan ke antrean!');
+        }
+
         \App\Models\Patient::create([
             'medical_record_number' => 'RM' . date('YmdHis'),
             'name' => $request->name,
             'nik' => $request->nik,
             'phone' => $request->phone,
+            'gender' => $request->gender,
+            'occupation' => $request->occupation,
             'address' => $request->address,
             'birth_date' => $request->birth_date,
             'gejala' => $request->gejala,
@@ -216,23 +293,25 @@ Route::middleware('auth')->group(function () {
             'status' => 'waiting',
         ]);
 
-        return back()->with('success', 'Data Pasien ' . $request->name . ' Berhasil Disimpan!');
+        return back()->with('success', 'Data Pasien Baru ' . $request->name . ' Berhasil Disimpan!');
     })->name('patients.store');
 
     Route::post('/patients/{patient}/new-visit', function(\App\Models\Patient $patient) {
         if (Auth::user()->role !== 'admin') abort(403, 'Akses ditolak. Khusus Administrator.');
-        if ($patient->status === 'waiting' || $patient->status === 'in_progress' || $patient->status === 'checked') {
-            return back()->with('error', 'Pasien ini masih dalam antrean aktif!');
+        
+        $isToday = $patient->created_at->isToday();
+        if ($isToday && in_array($patient->status, ['waiting', 'in_progress', 'checked'])) {
+            return back()->with('error', 'Pasien ini masih dalam antrean aktif hari ini!');
         }
 
-        $patient->update([
-            'status' => 'waiting',
-            'gejala' => null,
-            'tindakan' => null,
-            'diagnosa' => null,
-            'harga' => null,
-            'created_at' => now(), 
-        ]);
+        // Update atribut secara eksplisit untuk bypass fillable dan memaksa update created_at
+        $patient->status = 'waiting';
+        $patient->gejala = null;
+        $patient->tindakan = null;
+        $patient->diagnosa = null;
+        $patient->harga = null;
+        $patient->created_at = now();
+        $patient->save();
 
         return redirect()->route('dashboard')->with('success', 'Kunjungan baru untuk pasien ' . $patient->name . ' berhasil dibuat dan masuk antrean!');
     })->name('patients.new_visit');
