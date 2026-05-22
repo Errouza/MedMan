@@ -108,14 +108,15 @@
                                             <label class="block text-[12px] font-[900] text-gray-500 mb-1.5 uppercase tracking-wider">Nama Alat Medis</label>
                                             <select x-model="item.obat" name="alat_medis[]" class="w-full border-[2px] border-gray-200 rounded-[8px] px-3 py-2 text-[13px] font-bold text-gray-700 focus:ring-0 focus:border-orange-400" :required="butuhAlat">
                                                 <option value="" disabled selected>Pilih Alat...</option>
-                                                <option value="Kasa Steril">Kasa Steril</option>
-                                                <option value="Jarum Suntik 3cc">Jarum Suntik 3cc</option>
-                                                <option value="Jarum Suntik 5cc">Jarum Suntik 5cc</option>
-                                                <option value="Plester Gulung">Plester Gulung</option>
-                                                <option value="Betadine 15ml">Betadine 15ml</option>
-                                                <option value="Alkohol Swab">Alkohol Swab</option>
-                                                <option value="Benang Jahit Medis">Benang Jahit Medis</option>
-                                                <option value="Masker Medis">Masker Medis</option>
+                                                @foreach(['medical_consumable' => 'Alat Medis Habis Pakai', 'medical_fluid' => 'Cairan Medis', 'medical_equipment' => 'Peralatan Medis'] as $cat => $label)
+                                                    @if($medicines->where('category', $cat)->count() > 0)
+                                                        <optgroup label="{{ $label }}">
+                                                            @foreach($medicines->where('category', $cat) as $med)
+                                                                <option value="{{ $med->id }}">{{ $med->name }} (Stok: {{ $med->stock }})</option>
+                                                            @endforeach
+                                                        </optgroup>
+                                                    @endif
+                                                @endforeach
                                             </select>
                                         </div>
                                         <div class="w-[100px]">
@@ -157,11 +158,9 @@
                                             <label class="block text-[11px] font-[900] text-gray-500 mb-1.5 uppercase tracking-wider">Nama Obat</label>
                                             <select x-model="item.obat" name="resep_obat[]" class="w-full border-[2px] border-gray-200 rounded-[8px] px-3 py-2 text-[13px] font-bold text-gray-700 focus:ring-0 focus:border-[#56C427]" :required="butuhResep">
                                                 <option value="" disabled selected>Pilih Obat...</option>
-                                                <option value="Paracetamol 500mg">Paracetamol 500mg</option>
-                                                <option value="Amoxicillin 500mg">Amoxicillin 500mg</option>
-                                                <option value="Omeprazole 20mg">Omeprazole 20mg</option>
-                                                <option value="Ibuprofen 400mg">Ibuprofen 400mg</option>
-                                                <option value="Vitamin C 500mg">Vitamin C 500mg</option>
+                                                @foreach($medicines->where('category', 'medicines') as $med)
+                                                    <option value="{{ $med->id }}">{{ $med->name }} (Stok: {{ $med->stock }})</option>
+                                                @endforeach
                                             </select>
                                         </div>
                                         <!-- Dosis Obat -->

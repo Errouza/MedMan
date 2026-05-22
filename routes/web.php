@@ -88,7 +88,9 @@ Route::middleware('auth')->group(function () {
             ->orderBy('created_at', 'desc')
             ->get();
             
-        return view('patients.diagnose', compact('patient', 'histories'));
+        $medicines = \App\Models\Medicine::orderBy('name')->get();
+            
+        return view('patients.diagnose', compact('patient', 'histories', 'medicines'));
     })->name('patients.diagnose');
 
     Route::patch('/patients/{patient}/diagnose', function(\Illuminate\Http\Request $request, \App\Models\Patient $patient) {
@@ -104,17 +106,15 @@ Route::middleware('auth')->group(function () {
         
         // Proses Alat Medis Habis Pakai (Langsung memotong stok dan menambah harga layanan)
         if ($request->has('alat_medis') && is_array($request->alat_medis)) {
-            foreach ($request->alat_medis as $index => $medicineName) {
-                if (empty($medicineName)) continue;
+            foreach ($request->alat_medis as $index => $medicineId) {
+                if (empty($medicineId)) continue;
                 $jumlah = $request->alat_jumlah[$index] ?? 1;
                 
-                $medicine = \App\Models\Medicine::firstOrCreate(
-                    ['name' => $medicineName],
-                    ['stock' => 50, 'price' => 10000] // Default value
-                );
-                
-                $totalAlatMedis += ($medicine->price * $jumlah);
-                $medicine->decrement('stock', $jumlah);
+                $medicine = \App\Models\Medicine::find($medicineId);
+                if ($medicine) {
+                    $totalAlatMedis += ($medicine->price * $jumlah);
+                    $medicine->decrement('stock', $jumlah);
+                }
             }
         }
         
@@ -132,22 +132,20 @@ Route::middleware('auth')->group(function () {
                 'status' => 'pending'
             ]);
             
-            foreach ($request->resep_obat as $index => $medicineName) {
-                if (empty($medicineName)) continue;
+            foreach ($request->resep_obat as $index => $medicineId) {
+                if (empty($medicineId)) continue;
                 
-                $medicine = \App\Models\Medicine::firstOrCreate(
-                    ['name' => $medicineName],
-                    ['stock' => 50, 'price' => 15000]
-                );
-                
-                \App\Models\PrescriptionItem::create([
-                    'prescription_id' => $prescription->id,
-                    'medicine_id' => $medicine->id,
-                    'dosis' => $request->resep_dosis[$index] ?? '-',
-                    'keterangan' => $request->resep_keterangan[$index] ?? '',
-                    'jumlah' => $request->resep_jumlah[$index] ?? 1,
-                    'harga' => $medicine->price,
-                ]);
+                $medicine = \App\Models\Medicine::find($medicineId);
+                if ($medicine) {
+                    \App\Models\PrescriptionItem::create([
+                        'prescription_id' => $prescription->id,
+                        'medicine_id' => $medicine->id,
+                        'dosis' => $request->resep_dosis[$index] ?? '-',
+                        'keterangan' => $request->resep_keterangan[$index] ?? '',
+                        'jumlah' => $request->resep_jumlah[$index] ?? 1,
+                        'harga' => $medicine->price,
+                    ]);
+                }
             }
         }
         
@@ -377,8 +375,39 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/stock', function() { 
         if (Auth::user()->role !== 'admin') abort(403, 'Akses ditolak. Khusus Administrator.');
-        return view('stock.index'); 
+        $medicines = \App\Models\Medicine::orderBy('name')->get();
+        return view('stock.index', compact('medicines')); 
     })->name('stock.index');
+
+    Route::post('/stock', function(\Illuminate\Http\Request $request) {
+        if (Auth::user()->role !== 'admin') abort(403, 'Akses ditolak. Khusus Administrator.');
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'category' => 'required|string|in:medicines,medical_consumable,medical_fluid,medical_equipment',
+            'stock' => 'required|integer|min:0',
+            'price' => 'required|numeric|min:0',
+        ]);
+        \App\Models\Medicine::create($request->all());
+        return back()->with('success', 'Item berhasil ditambahkan!');
+    })->name('stock.store');
+
+    Route::put('/stock/{medicine}', function(\Illuminate\Http\Request $request, \App\Models\Medicine $medicine) {
+        if (Auth::user()->role !== 'admin') abort(403, 'Akses ditolak. Khusus Administrator.');
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'category' => 'required|string|in:medicines,medical_consumable,medical_fluid,medical_equipment',
+            'stock' => 'required|integer|min:0',
+            'price' => 'required|numeric|min:0',
+        ]);
+        $medicine->update($request->all());
+        return back()->with('success', 'Item berhasil diperbarui!');
+    })->name('stock.update');
+
+    Route::delete('/stock/{medicine}', function(\App\Models\Medicine $medicine) {
+        if (Auth::user()->role !== 'admin') abort(403, 'Akses ditolak. Khusus Administrator.');
+        $medicine->delete();
+        return back()->with('success', 'Item berhasil dihapus!');
+    })->name('stock.destroy');
 
 });
 
