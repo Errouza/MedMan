@@ -37,8 +37,10 @@
                     </span>
                     
                     <script>
+                        let serverTime = {{ now()->timestamp }} * 1000;
                         setInterval(function() {
-                            const d = new Date();
+                            serverTime += 1000;
+                            const d = new Date(serverTime);
                             const timeStr = String(d.getHours()).padStart(2, '0') + ':' + 
                                             String(d.getMinutes()).padStart(2, '0') + ':' + 
                                             String(d.getSeconds()).padStart(2, '0');
@@ -99,7 +101,7 @@
                     <thead>
                         <tr class="border-b-[3px] border-gray-100">
                             <th class="pb-4 px-2 text-[12px] font-[900] text-gray-400 uppercase tracking-widest">Rekam Medis</th>
-                            <th class="pb-4 px-2 text-[12px] font-[900] text-gray-400 uppercase tracking-widest text-center">Kamar</th>
+                            <th class="pb-4 px-2 text-[12px] font-[900] text-gray-400 uppercase tracking-widest text-center">No. Urut</th>
                             <th class="pb-4 px-2 text-[12px] font-[900] text-gray-400 uppercase tracking-widest">Nama Pasien</th>
                             <th class="pb-4 px-2 text-[12px] font-[900] text-gray-400 uppercase tracking-widest text-center">NIK</th>
                             <th class="pb-4 px-2 text-[12px] font-[900] text-gray-400 uppercase tracking-widest text-center">Tanggal</th>
@@ -108,6 +110,17 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y-[2px] divide-gray-50">
+                        @php
+                            // Calculate actual daily queue numbers (chronological order)
+                            $dailyCounters = [];
+                            foreach($patients->reverse() as $p) {
+                                $date = $p->created_at->format('Y-m-d');
+                                if(!isset($dailyCounters[$date])) $dailyCounters[$date] = 0;
+                                $dailyCounters[$date]++;
+                                $p->queue_number = $dailyCounters[$date];
+                            }
+                        @endphp
+                        
                         @forelse($patients ?? [] as $index => $patient)
                         @php
                             // Determine status
@@ -121,7 +134,7 @@
                                     $s = ['color' => 'bg-[#3B82F6]', 'shadow' => 'shadow-[0_0_8px_rgba(59,130,246,0.4)]', 'text' => 'Diperiksa', 'btn' => '-'];
                                     break;
                                 case 'checked':
-                                    $s = ['color' => 'bg-[#10B981]', 'shadow' => 'shadow-[0_0_8px_rgba(16,185,129,0.4)]', 'text' => 'Tagihan', 'btn' => '-'];
+                                    $s = ['color' => 'bg-[#10B981]', 'shadow' => 'shadow-[0_0_8px_rgba(16,185,129,0.4)]', 'text' => 'Tagihan', 'btn' => 'Proses Pembayaran'];
                                     break;
                                 case 'completed':
                                     $s = ['color' => 'bg-gray-400', 'shadow' => '', 'text' => 'Lunas', 'btn' => 'Lihat Data'];
@@ -130,7 +143,11 @@
                         @endphp
                         <tr class="hover:bg-blue-50 transition-colors group">
                             <td class="py-5 px-2 text-[14px] font-[800] text-[#0A3D74]">{{ $patient->medical_record_number }}</td>
-                            <td class="py-5 px-2 text-[14px] font-[800] text-[#0A3D74] text-center">-</td>
+                            <td class="py-5 px-2 text-center">
+                                <span class="w-8 h-8 rounded-full bg-[#EBF4FF] text-[#0A3D74] font-black text-[13px] flex items-center justify-center border border-[#6A9DF6]/30 mx-auto">
+                                    {{ $patient->queue_number }}
+                                </span>
+                            </td>
                             <td class="py-5 px-2">
                                 <div class="flex flex-col">
                                     <span class="text-[14px] font-[800] text-[#6A9DF6] group-hover:text-[#0A3D74] transition-colors">{{ $patient->name }}</span>
@@ -146,9 +163,13 @@
                                 </div>
                             </td>
                             <td class="py-5 px-2 text-right">
-                                @if($s['btn'] !== '-')
+                                @if($patient->status === 'checked')
+                                <a href="{{ route('billing.show', $patient) }}" class="bg-[#10B981] hover:bg-[#059669] text-white text-[11px] font-[900] px-4 py-2 rounded-[8px] transition-colors shadow-sm uppercase tracking-wide inline-block whitespace-nowrap">
+                                    Proses Pembayaran
+                                </a>
+                                @elseif($patient->status === 'completed')
                                 <a href="{{ route('patients.show', $patient) }}" class="bg-[#6A9DF6] hover:bg-[#0A3D74] text-white font-[800] text-[11px] px-5 py-2.5 rounded-[10px] transition-colors shadow-sm tracking-widest uppercase whitespace-nowrap inline-block">
-                                    {{ $s['btn'] }}
+                                    Lihat Data
                                 </a>
                                 @else
                                 <span class="text-gray-300">-</span>

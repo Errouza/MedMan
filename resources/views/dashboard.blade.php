@@ -14,6 +14,24 @@
         </div>
     </div>
 
+    @if(session('success'))
+    <div class="mb-6 p-4 bg-green-50 border-l-4 border-green-500 rounded-r-lg shadow-sm">
+        <div class="flex items-center gap-3">
+            <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div>
+            <span class="text-green-800 font-bold">{{ session('success') }}</span>
+        </div>
+    </div>
+    @endif
+
+    @if(session('error'))
+    <div class="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-r-lg shadow-sm">
+        <div class="flex items-center gap-3">
+            <div class="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></div>
+            <span class="text-red-800 font-bold">{{ session('error') }}</span>
+        </div>
+    </div>
+    @endif
+
     <!-- Top Cards -->
     <div class="grid grid-cols-1 xl:grid-cols-12 gap-6 w-full mb-6">
         
@@ -45,8 +63,10 @@
                     {{ now()->format('H:i') }}
                 </span>
                 <script>
+                    let dashboardServerTime = {{ now()->timestamp }} * 1000;
                     setInterval(function() {
-                        const d = new Date();
+                        dashboardServerTime += 1000;
+                        const d = new Date(dashboardServerTime);
                         const timeStr = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
                         const clockEl = document.getElementById('liveClock');
                         if(clockEl) clockEl.innerText = timeStr;
@@ -144,8 +164,10 @@
                 </thead>
                 <tbody class="divide-y-[2px] divide-gray-50">
                     @php
-                        // Fetch today's patients for live queue (FIFO order)
-                        $todayPatients = \App\Models\Patient::whereDate('created_at', \Carbon\Carbon::today())->oldest()->get();
+                        // Fetch today's patients for live queue (only active queue: waiting & in_progress)
+                        $todayPatients = \App\Models\Patient::whereDate('created_at', \Carbon\Carbon::today())
+                                            ->whereIn('status', ['waiting', 'in_progress'])
+                                            ->oldest()->get();
                     @endphp
                     
                     @forelse($todayPatients as $index => $patient)
@@ -181,7 +203,7 @@
                     <tr class="hover:bg-blue-50/50 transition-colors group">
                         <td class="py-5 px-2">
                             <span class="w-8 h-8 rounded-full bg-[#EBF4FF] text-[#0A3D74] font-black text-[13px] flex items-center justify-center border border-[#6A9DF6]/30">
-                                {{ $index + 1 }}
+                                {{ $patient->queue_number }}
                             </span>
                         </td>
                         <td class="py-5 px-2">

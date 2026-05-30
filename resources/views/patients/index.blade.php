@@ -1,13 +1,22 @@
 @if(Auth::user()->role === 'admin')
 <x-clinic-layout>
         
-        <div x-data="{ tab: '{{ (isset($searchPerformed) && $searchPerformed) || !session('success') ? 'data' : 'registrasi' }}' }" class="flex flex-col gap-6 w-full">
+        <div x-data="{ tab: '{{ (isset($searchPerformed) && $searchPerformed) || (!session('success') && !session('error') && !$errors->any()) ? 'data' : 'registrasi' }}' }" class="flex flex-col gap-6 w-full">
             
             @if(session('success'))
-            <div class="mb-2 p-4 bg-green-50 border-l-4 border-green-500 rounded-r-lg">
+            <div class="mb-2 p-4 bg-green-50 border-l-4 border-green-500 rounded-r-lg shadow-sm">
                 <div class="flex items-center gap-3">
                     <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div>
                     <span class="text-green-800 font-bold">{{ session('success') }}</span>
+                </div>
+            </div>
+            @endif
+
+            @if(session('error'))
+            <div class="mb-2 p-4 bg-red-50 border-l-4 border-red-500 rounded-r-lg shadow-sm">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></div>
+                    <span class="text-red-800 font-bold">{{ session('error') }}</span>
                 </div>
             </div>
             @endif
@@ -238,6 +247,7 @@
             <thead>
                 <tr class="border-b-[2px] border-gray-100">
                     <th class="pb-5 px-4 text-[14px] font-[900] text-black tracking-wide">Rekam Medis</th>
+                    <th class="pb-5 px-4 text-[14px] font-[900] text-black tracking-wide text-center">No. Urut</th>
                     <th class="pb-5 px-4 text-[14px] font-[900] text-black tracking-wide text-center">Nama Pasien</th>
                     <th class="pb-5 px-4 text-[14px] font-[900] text-black tracking-wide text-center">NIK</th>
                     <th class="pb-5 px-4 text-[14px] font-[900] text-black tracking-wide text-center">Tanggal</th>
@@ -254,6 +264,11 @@
                 @endphp
                 <tr class="hover:bg-blue-50/50 transition-colors group {{ $isInProgress ? 'bg-blue-50/30' : '' }}">
                     <td class="py-6 px-4 text-[14px] font-[800] {{ $textColor }}">{{ $patient->medical_record_number }}</td>
+                    <td class="py-6 px-4 text-center">
+                        <span class="w-8 h-8 rounded-full bg-[#EBF4FF] text-[#0A3D74] font-black text-[13px] flex items-center justify-center border border-[#6A9DF6]/30 mx-auto">
+                            {{ $patient->queue_number }}
+                        </span>
+                    </td>
                     <td class="py-6 px-4 text-center">
                         <div class="flex flex-col items-center">
                             <span class="text-[14px] font-[800] {{ $nameColor }}">{{ $patient->name }}</span>
@@ -282,7 +297,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="5" class="py-16 text-center">
+                    <td colspan="6" class="py-16 text-center">
                         <div class="flex flex-col items-center justify-center text-gray-400">
                             <svg class="w-12 h-12 mb-3 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                             <span class="font-bold text-[14px]">Belum ada daftar pasien.</span>

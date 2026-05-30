@@ -79,18 +79,13 @@
                 @endif
             </a>
 
-            <!-- Stok -->
-            <a href="{{ route('stock.index') }}" class="group relative flex flex-col items-center justify-center w-full cursor-pointer transition-colors opacity-90 hover:opacity-100">
+            <!-- Stok (Disabled) -->
+            <div title="Fitur tidak dapat diakses" class="group relative flex flex-col items-center justify-center w-full cursor-not-allowed transition-colors opacity-40">
                 <span class="text-[10px] font-semibold mb-1">Stok</span>
                 <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M3 5v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2H5c-1.11 0-2 .9-2 2zm12 4c0 1.66-1.34 3-3 3s-3-1.34-3-3V5h6v4z" />
                 </svg>
-                @if(request()->routeIs('stock.*'))
-                <svg class="absolute right-[-10px] top-[60%] -translate-y-1/2 w-6 h-8 text-[#8ED1FC] drop-shadow-md" viewBox="0 0 26 36" fill="currentColor" stroke="white" stroke-width="4" stroke-linejoin="round">
-                    <path d="M24 4 L4 18 L24 32 Z" />
-                </svg>
-                @endif
-            </a>
+            </div>
         </nav>
     </div>
 

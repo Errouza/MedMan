@@ -106,11 +106,15 @@ Route::middleware('auth')->group(function () {
         
         // Proses Alat Medis Habis Pakai (Langsung memotong stok dan menambah harga layanan)
         if ($request->has('alat_medis') && is_array($request->alat_medis)) {
-            foreach ($request->alat_medis as $index => $medicineId) {
-                if (empty($medicineId)) continue;
+            foreach ($request->alat_medis as $index => $medicineName) {
+                if (empty($medicineName)) continue;
                 $jumlah = $request->alat_jumlah[$index] ?? 1;
                 
-                $medicine = \App\Models\Medicine::find($medicineId);
+                $medicine = \App\Models\Medicine::firstOrCreate(
+                    ['name' => $medicineName, 'category' => 'medical_consumable'],
+                    ['price' => 0, 'stock' => 0]
+                );
+                
                 if ($medicine) {
                     $totalAlatMedis += ($medicine->price * $jumlah);
                     $medicine->decrement('stock', $jumlah);
@@ -132,10 +136,14 @@ Route::middleware('auth')->group(function () {
                 'status' => 'pending'
             ]);
             
-            foreach ($request->resep_obat as $index => $medicineId) {
-                if (empty($medicineId)) continue;
+            foreach ($request->resep_obat as $index => $medicineName) {
+                if (empty($medicineName)) continue;
                 
-                $medicine = \App\Models\Medicine::find($medicineId);
+                $medicine = \App\Models\Medicine::firstOrCreate(
+                    ['name' => $medicineName, 'category' => 'medicines'],
+                    ['price' => 0, 'stock' => 0]
+                );
+                
                 if ($medicine) {
                     \App\Models\PrescriptionItem::create([
                         'prescription_id' => $prescription->id,

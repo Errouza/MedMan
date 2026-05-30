@@ -23,4 +23,24 @@ class Patient extends Model
         'harga',
         'status',
     ];
+
+    /**
+     * Get the chronological queue number for this patient on their registration date.
+     */
+    public function getQueueNumberAttribute()
+    {
+        if (!$this->created_at) {
+            return null;
+        }
+        
+        return self::whereDate('created_at', $this->created_at->toDateString())
+            ->where(function($query) {
+                $query->where('created_at', '<', $this->created_at)
+                      ->orWhere(function($q) {
+                          $q->where('created_at', '=', $this->created_at)
+                            ->where('patient_id', '<=', $this->patient_id);
+                      });
+            })
+            ->count();
+    }
 }

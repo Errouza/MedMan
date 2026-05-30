@@ -79,15 +79,10 @@
                     </div>
 
                     <div class="bg-gray-50 rounded-[16px] p-5 w-full mb-6 border-[2.5px] border-gray-100">
-                        <div class="flex gap-6">
-                            <div class="flex-[2]">
-                                <label class="text-[#0A3D74] font-[900] text-[15px] block mb-2 px-1">Tindakan Medis</label>
-                                <input type="text" name="tindakan" value="{{ old('tindakan', $patient->tindakan) }}" placeholder="Isi Tindakan Dokter" class="w-full border-[2.5px] border-gray-200 rounded-[12px] px-4 py-3 text-[14px] text-gray-800 font-bold focus:ring-0 focus:border-[#6A9DF6] placeholder-gray-400 bg-white" required>
-                            </div>
-                            <div class="flex-1">
-                                <label class="text-[#0A3D74] font-[900] text-[15px] block mb-2 px-1">Biaya Layanan (Rp)</label>
-                                <input type="number" name="harga" value="{{ old('harga', $patient->harga ?? 100000) }}" class="w-full border-[2.5px] border-gray-200 rounded-[12px] px-4 py-3 text-[14px] text-gray-800 font-bold focus:ring-0 focus:border-[#6A9DF6] bg-white" required>
-                            </div>
+                        <div class="w-full">
+                            <label class="text-[#0A3D74] font-[900] text-[15px] block mb-2 px-1">Tindakan Medis</label>
+                            <input type="text" name="tindakan" value="{{ old('tindakan', $patient->tindakan) }}" placeholder="Isi Tindakan Dokter" class="w-full border-[2.5px] border-gray-200 rounded-[12px] px-4 py-3 text-[14px] text-gray-800 font-bold focus:ring-0 focus:border-[#6A9DF6] placeholder-gray-400 bg-white" required>
+                            <input type="hidden" name="harga" value="100000">
                         </div>
                     </div>
 
@@ -106,18 +101,7 @@
                                     <div class="flex items-end gap-4 relative group bg-white p-3.5 rounded-[12px] border border-gray-200 shadow-sm">
                                         <div class="flex-[3]">
                                             <label class="block text-[12px] font-[900] text-gray-500 mb-1.5 uppercase tracking-wider">Nama Alat Medis</label>
-                                            <select x-model="item.obat" name="alat_medis[]" class="w-full border-[2px] border-gray-200 rounded-[8px] px-3 py-2 text-[13px] font-bold text-gray-700 focus:ring-0 focus:border-orange-400" :required="butuhAlat">
-                                                <option value="" disabled selected>Pilih Alat...</option>
-                                                @foreach(['medical_consumable' => 'Alat Medis Habis Pakai', 'medical_fluid' => 'Cairan Medis', 'medical_equipment' => 'Peralatan Medis'] as $cat => $label)
-                                                    @if($medicines->where('category', $cat)->count() > 0)
-                                                        <optgroup label="{{ $label }}">
-                                                            @foreach($medicines->where('category', $cat) as $med)
-                                                                <option value="{{ $med->id }}">{{ $med->name }} (Stok: {{ $med->stock }})</option>
-                                                            @endforeach
-                                                        </optgroup>
-                                                    @endif
-                                                @endforeach
-                                            </select>
+                                            <input type="text" x-model="item.obat" name="alat_medis[]" class="w-full border-[2px] border-gray-200 rounded-[8px] px-3 py-2 text-[13px] font-bold text-gray-700 focus:ring-0 focus:border-orange-400" placeholder="Ketik nama alat medis..." :required="butuhAlat">
                                         </div>
                                         <div class="w-[100px]">
                                             <label class="block text-[12px] font-[900] text-gray-500 mb-1.5 uppercase tracking-wider">Jumlah</label>
@@ -156,12 +140,7 @@
                                         <!-- Nama Obat -->
                                         <div class="flex-[1.5]">
                                             <label class="block text-[11px] font-[900] text-gray-500 mb-1.5 uppercase tracking-wider">Nama Obat</label>
-                                            <select x-model="item.obat" name="resep_obat[]" class="w-full border-[2px] border-gray-200 rounded-[8px] px-3 py-2 text-[13px] font-bold text-gray-700 focus:ring-0 focus:border-[#56C427]" :required="butuhResep">
-                                                <option value="" disabled selected>Pilih Obat...</option>
-                                                @foreach($medicines->where('category', 'medicines') as $med)
-                                                    <option value="{{ $med->id }}">{{ $med->name }} (Stok: {{ $med->stock }})</option>
-                                                @endforeach
-                                            </select>
+                                            <input type="text" x-model="item.obat" name="resep_obat[]" class="w-full border-[2px] border-gray-200 rounded-[8px] px-3 py-2 text-[13px] font-bold text-gray-700 focus:ring-0 focus:border-[#56C427]" placeholder="Ketik nama obat..." :required="butuhResep">
                                         </div>
                                         <!-- Dosis Obat -->
                                         <div class="flex-1">
