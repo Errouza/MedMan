@@ -23,54 +23,75 @@
             <!-- Right Card: Calendar/Mini Table -->
             <div class="xl:col-span-6 bg-white rounded-[24px] shadow-[0_0_15px_rgba(0,0,0,0.02)] border border-gray-100 p-8 flex flex-col sm:flex-row items-center gap-8 min-h-[200px]">
                 <!-- Calendar Widget -->
-                <div class="flex flex-col items-center justify-center w-24 shrink-0">
-                    <!-- Blue Box -->
-                    <div class="bg-[#6A9DF6] text-white rounded-md w-[60px] h-[70px] flex flex-col items-center justify-center overflow-hidden shadow-sm">
-                        <span class="text-[11px] font-bold lowercase mt-1">{{ now()->format('D') }}</span>
-                        <span class="text-[36px] font-bold leading-none mb-1">{{ now()->format('j') }}</span>
+                <div class="flex flex-col items-center justify-center w-20 shrink-0">
+                    <div class="bg-[#6A9DF6] text-white rounded-[14px] w-full py-2 flex flex-col items-center justify-center overflow-hidden shadow-md">
+                        <span class="text-[10px] font-bold uppercase mt-0.5 tracking-wider">{{ now()->translatedFormat('D') }}</span>
+                        <span class="text-[28px] font-[900] leading-none my-1">{{ now()->format('j') }}</span>
                     </div>
-                    <span class="text-[11px] font-[900] text-black mt-2 text-center leading-tight whitespace-nowrap">{{ now()->translatedFormat('F Y') }}</span>
+                    <span class="text-[11px] font-[900] text-black mt-2 text-center leading-tight">{{ now()->translatedFormat('M Y') }}</span>
                     
                     <!-- Live Clock -->
-                    <span id="liveClock" class="text-[12px] font-black text-[#0A3D74] bg-[#EBF4FF] px-3 py-1 rounded-full mt-1.5 border border-[#6A9DF6]/30 shadow-sm whitespace-nowrap">
-                        {{ now()->format('H:i:s') }}
+                    <span id="liveClock" class="text-[11px] font-black text-[#0A3D74] bg-[#EBF4FF] px-2.5 py-1 rounded-full mt-1.5 border border-[#6A9DF6]/30 shadow-sm">
+                        {{ now()->format('H:i') }}
                     </span>
-                    
                     <script>
-                        let serverTime = {{ now()->timestamp }} * 1000;
+                        let dashboardServerTime = {{ now()->timestamp }} * 1000;
                         setInterval(function() {
-                            serverTime += 1000;
-                            const d = new Date(serverTime);
-                            const timeStr = String(d.getHours()).padStart(2, '0') + ':' + 
-                                            String(d.getMinutes()).padStart(2, '0') + ':' + 
-                                            String(d.getSeconds()).padStart(2, '0');
+                            dashboardServerTime += 1000;
+                            const d = new Date(dashboardServerTime);
+                            const timeStr = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
                             const clockEl = document.getElementById('liveClock');
                             if(clockEl) clockEl.innerText = timeStr;
                         }, 1000);
                     </script>
                 </div>
                 
-                <!-- Mini Table -->
-                <div class="flex-1 w-full overflow-x-auto">
-                    <div class="w-full bg-white min-w-[250px]">
-                        <table class="w-full border-collapse border border-gray-300">
-                            <thead>
-                                <tr>
-                                    <th class="bg-[#6A9DF6] border border-gray-300 h-8 px-3 text-white text-left font-extrabold text-[10px] uppercase tracking-wider whitespace-nowrap">Tanggal & Jam</th>
-                                    <th class="bg-[#6A9DF6] border border-gray-300 h-8 px-3 text-white text-left font-extrabold text-[10px] uppercase tracking-wider whitespace-nowrap">Jadwal Dokter</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td class="border border-gray-300 h-8 px-3 text-[10px] text-gray-700 font-bold whitespace-nowrap">{{ now()->translatedFormat('d F Y') }} <span class="text-blue-500">(08:00 - 13:00)</span></td>
-                                    <td class="border border-gray-300 h-8 px-3 text-[10px] text-[#0A3D74] font-extrabold whitespace-nowrap">{{ Auth::user()->name ?? 'dr. Andini (Sesi Pagi)' }}</td>
-                                </tr>
-                                <tr>
-                                    <td class="border border-gray-300 h-8 px-3 text-[10px] text-gray-700 font-bold whitespace-nowrap">{{ now()->translatedFormat('d F Y') }} <span class="text-blue-500">(16:00 - 21:00)</span></td>
-                                    <td class="border border-gray-300 h-8 px-3 text-[10px] text-[#0A3D74] font-extrabold whitespace-nowrap">{{ Auth::user()->name ?? 'dr. Andini (Sesi Malam)' }}</td>
-                                </tr>
-                            </tbody>
-                        </table>
+                <!-- Mini Table Jadwal -->
+                <div class="flex-1 w-full" x-data="{ 
+                    schedules: JSON.parse(localStorage.getItem('doctorSchedules')) || [
+                        { time: '08:00 - 13:00', doctor: 'dr. Andini (Pagi)', isActive: true },
+                        { time: '16:00 - 21:00', doctor: 'dr. Andini (Malam)', isActive: false }
+                    ],
+                    save() {
+                        localStorage.setItem('doctorSchedules', JSON.stringify(this.schedules));
+                    },
+                    addSchedule() {
+                        this.schedules.push({ time: '', doctor: '', isActive: true });
+                        this.save();
+                    },
+                    removeSchedule(index) {
+                        this.schedules.splice(index, 1);
+                        this.save();
+                    },
+                    init() {
+                        window.addEventListener('storage', (e) => {
+                            if (e.key === 'doctorSchedules' && e.newValue) {
+                                this.schedules = JSON.parse(e.newValue);
+                            }
+                        });
+                    }
+                }">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="text-[14px] font-[900] text-[#0A3D74]">Jadwal Dokter Hari Ini</h3>
+                        <button @click="addSchedule" class="text-[10px] bg-[#6A9DF6]/20 text-[#0A3D74] px-2 py-1 rounded-md font-bold hover:bg-[#6A9DF6] hover:text-white transition-colors">+ Tambah</button>
+                    </div>
+                    <div class="flex flex-col gap-2 max-h-[110px] overflow-y-auto pr-2" style="scrollbar-width: thin;">
+                        <template x-for="(schedule, index) in schedules" :key="index">
+                            <div class="flex justify-between items-center bg-blue-50/50 p-2.5 pr-6 rounded-lg border border-blue-100 relative group">
+                                <div class="flex items-center gap-2">
+                                    <button type="button" @click="schedule.isActive = !schedule.isActive; save()" class="w-2.5 h-2.5 rounded-full shrink-0 transition-colors" :class="schedule.isActive ? 'bg-green-500' : 'bg-gray-400'" title="Toggle Status Aktif"></button>
+                                    <input type="text" x-model="schedule.time" @input="save()" class="text-[12px] font-bold text-gray-700 bg-transparent border-none p-0 focus:ring-0 w-24 placeholder-gray-400" placeholder="08:00 - 13:00">
+                                </div>
+                                <input type="text" x-model="schedule.doctor" @input="save()" class="text-[12px] font-[900] text-[#0A3D74] bg-transparent border-none p-0 focus:ring-0 w-32 text-right placeholder-blue-300" placeholder="Nama Dokter">
+                                
+                                <button type="button" @click="removeSchedule(index)" class="absolute right-1.5 top-1/2 -translate-y-1/2 bg-red-500 text-white w-4 h-4 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-sm z-10" title="Hapus Jadwal">
+                                    <svg class="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                </button>
+                            </div>
+                        </template>
+                        <div x-show="schedules.length === 0" class="text-center text-[11px] text-gray-400 italic py-2">
+                            Belum ada jadwal dokter.
+                        </div>
                     </div>
                 </div>
             </div>

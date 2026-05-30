@@ -169,16 +169,7 @@ Route::middleware('auth')->group(function () {
         return redirect()->route('patients.index')->with('error', 'Pilih pasien dari antrean terlebih dahulu dengan mengklik "Terima Pasien".');
     })->name('pelayanan.index');
 
-    Route::get('/prescriptions', function() {
-        if (Auth::user()->role !== 'doctor') abort(403, 'Akses ditolak. Khusus Dokter.');
-        $patients = \App\Models\Patient::whereIn('status', ['waiting', 'in_progress', 'checked'])->get();
-        return view('prescriptions.index', compact('patients'));
-    })->name('prescriptions.index');
 
-    Route::post('/prescriptions', function(\Illuminate\Http\Request $request) {
-        if (Auth::user()->role !== 'doctor') abort(403, 'Akses ditolak. Khusus Dokter.');
-        return back()->with('success', 'Resep berhasil dibuat dan ditandatangani!');
-    })->name('prescriptions.store');
 
     Route::get('/certificates', function() {
         if (Auth::user()->role !== 'doctor') abort(403, 'Akses ditolak. Khusus Dokter.');
@@ -343,6 +334,13 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/billing/{patient}', function(\Illuminate\Http\Request $request, \App\Models\Patient $patient) {
         if (Auth::user()->role !== 'admin') abort(403, 'Akses ditolak. Khusus Administrator.');
+
+        $request->validate([
+            'items' => 'nullable|array',
+            'items.*.id' => 'required|exists:prescription_items,id',
+            'items.*.price' => 'required|numeric|min:0',
+        ]);
+
         $prescriptions = \App\Models\Prescription::where('patient_id', $patient->patient_id)
             ->where('status', 'pending')
             ->first();
@@ -351,12 +349,18 @@ Route::middleware('auth')->group(function () {
         if ($prescriptions) {
             $prescriptionData = [];
             foreach($prescriptions->items as $item) {
+                $inputPrice = $request->input("items.{$item->id}.price", 0);
+                
                 $medicine = $item->medicine;
                 if ($medicine) {
+                    // Update the price for this item and the base medicine
+                    $medicine->update(['price' => $inputPrice]);
+                    $item->update(['harga' => $inputPrice]);
+
                     $prescriptionData[] = [
                         'name' => $medicine->name,
                         'jumlah' => $item->jumlah,
-                        'harga' => $item->harga
+                        'harga' => $inputPrice
                     ];
                     $medicine->decrement('stock', $item->jumlah);
                 }

@@ -72,13 +72,7 @@
                     @endif
                     Pelayanan Pasien
                 </a>
-                <!-- Tab 3 -->
-                <a href="{{ route('prescriptions.index') }}" class="{{ request()->routeIs('prescriptions.index') ? 'bg-white border-t-[3px] border-[#6A9DF6] border-x border-gray-100 border-b-0 text-[#6A9DF6] pb-[13px] pt-3 px-8' : 'bg-[#6A9DF6] hover:bg-[#5b8ce0] text-white pb-2.5 pt-2.5 px-7 border border-transparent' }} rounded-t-[16px] font-[800] text-[14px] transition-all relative">
-                    @if(request()->routeIs('prescriptions.index'))
-                    <div class="absolute -bottom-[2px] left-0 right-0 h-[3px] bg-white"></div>
-                    @endif
-                    Buat Resep
-                </a>
+
                 <!-- Tab 4 -->
                 <a href="{{ route('certificates.index') }}" class="{{ request()->routeIs('certificates.index') ? 'bg-white border-t-[3px] border-[#6A9DF6] border-x border-gray-100 border-b-0 text-[#6A9DF6] pb-[13px] pt-3 px-8' : 'bg-[#6A9DF6] hover:bg-[#5b8ce0] text-white pb-2.5 pt-2.5 px-7 border border-transparent' }} rounded-t-[16px] font-[800] text-[14px] transition-all relative">
                     @if(request()->routeIs('certificates.index'))

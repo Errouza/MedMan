@@ -75,22 +75,50 @@
             </div>
             
             <!-- Mini Table Jadwal -->
-            <div class="flex-1">
-                <h3 class="text-[14px] font-[900] text-[#0A3D74] mb-3">Jadwal Dokter Hari Ini</h3>
-                <div class="flex flex-col gap-2">
-                    <div class="flex justify-between items-center bg-blue-50/50 p-2.5 rounded-lg border border-blue-100">
-                        <div class="flex items-center gap-2">
-                            <div class="w-2 h-2 rounded-full bg-green-500"></div>
-                            <span class="text-[12px] font-bold text-gray-700">08:00 - 13:00</span>
+            <div class="flex-1 w-full" x-data="{ 
+                schedules: JSON.parse(localStorage.getItem('doctorSchedules')) || [
+                    { time: '08:00 - 13:00', doctor: 'dr. Andini (Pagi)', isActive: true },
+                    { time: '16:00 - 21:00', doctor: 'dr. Andini (Malam)', isActive: false }
+                ],
+                save() {
+                    localStorage.setItem('doctorSchedules', JSON.stringify(this.schedules));
+                },
+                addSchedule() {
+                    this.schedules.push({ time: '', doctor: '', isActive: true });
+                    this.save();
+                },
+                removeSchedule(index) {
+                    this.schedules.splice(index, 1);
+                    this.save();
+                },
+                init() {
+                    window.addEventListener('storage', (e) => {
+                        if (e.key === 'doctorSchedules' && e.newValue) {
+                            this.schedules = JSON.parse(e.newValue);
+                        }
+                    });
+                }
+            }">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="text-[14px] font-[900] text-[#0A3D74]">Jadwal Dokter Hari Ini</h3>
+                    <button @click="addSchedule" class="text-[10px] bg-[#6A9DF6]/20 text-[#0A3D74] px-2 py-1 rounded-md font-bold hover:bg-[#6A9DF6] hover:text-white transition-colors">+ Tambah</button>
+                </div>
+                <div class="flex flex-col gap-2 max-h-[110px] overflow-y-auto pr-2" style="scrollbar-width: thin;">
+                    <template x-for="(schedule, index) in schedules" :key="index">
+                        <div class="flex justify-between items-center bg-blue-50/50 p-2.5 pr-6 rounded-lg border border-blue-100 relative group">
+                            <div class="flex items-center gap-2">
+                                <button type="button" @click="schedule.isActive = !schedule.isActive; save()" class="w-2.5 h-2.5 rounded-full shrink-0 transition-colors" :class="schedule.isActive ? 'bg-green-500' : 'bg-gray-400'" title="Toggle Status Aktif"></button>
+                                <input type="text" x-model="schedule.time" @input="save()" class="text-[12px] font-bold text-gray-700 bg-transparent border-none p-0 focus:ring-0 w-24 placeholder-gray-400" placeholder="08:00 - 13:00">
+                            </div>
+                            <input type="text" x-model="schedule.doctor" @input="save()" class="text-[12px] font-[900] text-[#0A3D74] bg-transparent border-none p-0 focus:ring-0 w-32 text-right placeholder-blue-300" placeholder="Nama Dokter">
+                            
+                            <button type="button" @click="removeSchedule(index)" class="absolute right-1.5 top-1/2 -translate-y-1/2 bg-red-500 text-white w-4 h-4 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-sm z-10" title="Hapus Jadwal">
+                                <svg class="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>
+                            </button>
                         </div>
-                        <span class="text-[12px] font-[900] text-[#0A3D74]">dr. Andini (Pagi)</span>
-                    </div>
-                    <div class="flex justify-between items-center bg-gray-50 p-2.5 rounded-lg border border-gray-100">
-                        <div class="flex items-center gap-2">
-                            <div class="w-2 h-2 rounded-full bg-gray-400"></div>
-                            <span class="text-[12px] font-bold text-gray-700">16:00 - 21:00</span>
-                        </div>
-                        <span class="text-[12px] font-[900] text-gray-500">dr. Andini (Malam)</span>
+                    </template>
+                    <div x-show="schedules.length === 0" class="text-center text-[11px] text-gray-400 italic py-2">
+                        Belum ada jadwal dokter.
                     </div>
                 </div>
             </div>
