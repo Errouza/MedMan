@@ -99,13 +99,27 @@
                             </div>
                             
                             @if($history->prescription_data && count($history->prescription_data) > 0)
+                            @php
+                                $obatItems = [];
+                                $alatItems = [];
+                                foreach($history->prescription_data as $med) {
+                                    $medCheck = \App\Models\Medicine::where('name', $med['name'])->first();
+                                    if ($medCheck && $medCheck->category === 'medical_consumable') {
+                                        $alatItems[] = $med;
+                                    } else {
+                                        $obatItems[] = $med;
+                                    }
+                                }
+                            @endphp
+
+                            @if(count($obatItems) > 0)
                             <div>
                                 <h5 class="text-[12px] font-[900] text-[#56C427] uppercase tracking-wider mb-2 flex items-center gap-1.5">
                                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"></path></svg>
                                     Resep Obat
                                 </h5>
                                 <ul class="space-y-2">
-                                    @foreach($history->prescription_data as $med)
+                                    @foreach($obatItems as $med)
                                         <li class="flex items-center justify-between bg-[#F4F6FC] p-2.5 rounded-lg border border-[#EBF4FF]">
                                             <span class="text-[13px] font-bold text-[#0A3D74]">{{ $med['name'] }}</span>
                                             <span class="text-[11px] font-[900] text-gray-500 bg-white px-2 py-1 rounded-md border border-gray-100">{{ $med['jumlah'] }} pcs</span>
@@ -113,6 +127,24 @@
                                     @endforeach
                                 </ul>
                             </div>
+                            @endif
+
+                            @if(count($alatItems) > 0)
+                            <div class="mt-4">
+                                <h5 class="text-[12px] font-[900] text-[#6A9DF6] uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+                                    Alat Habis Pakai
+                                </h5>
+                                <ul class="space-y-2">
+                                    @foreach($alatItems as $med)
+                                        <li class="flex items-center justify-between bg-[#F4F6FC] p-2.5 rounded-lg border border-[#EBF4FF]">
+                                            <span class="text-[13px] font-bold text-[#0A3D74]">{{ $med['name'] }}</span>
+                                            <span class="text-[11px] font-[900] text-gray-500 bg-white px-2 py-1 rounded-md border border-gray-100">{{ $med['jumlah'] }} pcs</span>
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                            @endif
                             @endif
                         </div>
                     </div>

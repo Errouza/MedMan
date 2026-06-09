@@ -46,17 +46,7 @@
             <div class="grid grid-cols-1 md:grid-cols-12 gap-6 mb-10 pb-8 border-b-[3px] border-gray-100">
                 <div class="md:col-span-2">
                     <h3 class="text-[12px] font-[900] text-black tracking-wide mb-1">No. Urut Antrian</h3>
-                    @php
-                    // Calculate today's queue number (FIFO order)
-                    $todayPatients = \App\Models\Patient::whereDate('created_at', \Carbon\Carbon::parse($patient->created_at)->toDateString())
-                    ->oldest()
-                    ->get();
-                    $index = $todayPatients->search(function($p) use ($patient) {
-                    return $p->patient_id == $patient->patient_id;
-                    });
-                    $queueNumber = $index + 1;
-                    @endphp
-                    <p class="text-[32px] font-[900] text-[#6A9DF6] leading-none">{{ $queueNumber }}</p>
+                    <p class="text-[32px] font-[900] text-[#6A9DF6] leading-none">{{ $patient->queue_number ?? '-' }}</p>
                 </div>
                 <div class="md:col-span-4 overflow-hidden">
                     <h3 class="text-[12px] font-[900] text-black tracking-wide mb-1">No.Rekam Medis</h3>
@@ -121,10 +111,10 @@
                                 <input type="hidden" name="items[{{ $item->id }}][id]" value="{{ $item->id }}">
                                 <div class="flex items-center ml-auto">
                                     <span class="text-gray-500 font-bold mr-2">Rp</span>
-                                    <input type="number" x-model.number="items[{{ $loopIndex }}].price" name="items[{{ $item->id }}][price]" class="w-32 border-2 border-gray-200 focus:border-[#6A9DF6] rounded-[8px] text-sm px-3 py-1.5 outline-none transition-colors font-bold text-[#0A3D74]" placeholder="Harga Satuan" min="0" required>
+                                    <input type="number" x-model.number="items.find(i => i.id == {{ $item->id }}).price" name="items[{{ $item->id }}][price]" class="w-32 border-2 border-gray-200 focus:border-[#6A9DF6] rounded-[8px] text-sm px-3 py-1.5 outline-none transition-colors font-bold text-[#0A3D74]" placeholder="Harga Satuan" min="0" required>
                                 </div>
                             </td>
-                            <td class="py-3 px-4 whitespace-nowrap">Rp. <span x-text="new Intl.NumberFormat('id-ID').format(items[{{ $loopIndex }}].price * items[{{ $loopIndex }}].qty)"></span></td>
+                            <td class="py-3 px-4 whitespace-nowrap">Rp. <span x-text="new Intl.NumberFormat('id-ID').format(items.find(i => i.id == {{ $item->id }}).price * {{ $item->jumlah }})"></span></td>
                         </tr>
                         @endforeach
                         @else

@@ -22,6 +22,7 @@ class Patient extends Model
         'tindakan',
         'harga',
         'status',
+        'daily_queue_number',
     ];
 
     /**
@@ -29,18 +30,6 @@ class Patient extends Model
      */
     public function getQueueNumberAttribute()
     {
-        if (!$this->created_at) {
-            return null;
-        }
-        
-        return self::whereDate('created_at', $this->created_at->toDateString())
-            ->where(function($query) {
-                $query->where('created_at', '<', $this->created_at)
-                      ->orWhere(function($q) {
-                          $q->where('created_at', '=', $this->created_at)
-                            ->where('patient_id', '<=', $this->patient_id);
-                      });
-            })
-            ->count();
+        return $this->daily_queue_number;
     }
 }

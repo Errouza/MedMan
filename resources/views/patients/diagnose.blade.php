@@ -18,16 +18,7 @@
                 <div class="flex items-start gap-8 mb-8 bg-blue-50/50 p-5 rounded-2xl border border-blue-100/50">
                     <div class="flex flex-col">
                         <span class="text-[11px] font-extrabold text-black mb-1 uppercase tracking-wider">Antrian</span>
-                        @php
-                            $todayPatients = \App\Models\Patient::whereDate('created_at', \Carbon\Carbon::parse($patient->created_at)->toDateString())
-                                                ->oldest()
-                                                ->get();
-                            $index = $todayPatients->search(function($p) use ($patient) { 
-                                return $p->patient_id == $patient->patient_id; 
-                            });
-                            $queueNumber = $index + 1;
-                        @endphp
-                        <span class="text-[32px] font-[900] text-[#0A3D74] leading-none" style="font-family: 'Inter', sans-serif;">{{ $queueNumber }}</span>
+                        <span class="text-[32px] font-[900] text-[#0A3D74] leading-none" style="font-family: 'Inter', sans-serif;">{{ $patient->queue_number ?? '-' }}</span>
                     </div>
                     <div class="w-px h-12 bg-blue-200 mx-2"></div>
                     <div class="flex flex-col">
@@ -214,14 +205,40 @@
                                 </div>
                                 
                                 @if($history->prescription_data && count($history->prescription_data) > 0)
+                                    @php
+                                        $obatItems = [];
+                                        $alatItems = [];
+                                        foreach($history->prescription_data as $med) {
+                                            $medCheck = \App\Models\Medicine::where('name', $med['name'])->first();
+                                            if ($medCheck && $medCheck->category === 'medical_consumable') {
+                                                $alatItems[] = $med;
+                                            } else {
+                                                $obatItems[] = $med;
+                                            }
+                                        }
+                                    @endphp
+                                    
+                                    @if(count($obatItems) > 0)
                                     <div class="mt-3 pt-3 border-t border-gray-200/60">
                                         <p class="text-[11px] font-black text-green-600 mb-1.5">Resep / Obat:</p>
                                         <ul class="list-disc list-inside text-[11px] font-bold text-gray-500 marker:text-green-300">
-                                            @foreach($history->prescription_data as $med)
+                                            @foreach($obatItems as $med)
                                                 <li>{{ $med['name'] }} ({{ $med['jumlah'] }})</li>
                                             @endforeach
                                         </ul>
                                     </div>
+                                    @endif
+                                    
+                                    @if(count($alatItems) > 0)
+                                    <div class="mt-2">
+                                        <p class="text-[11px] font-black text-[#6A9DF6] mb-1.5">Alat Habis Pakai:</p>
+                                        <ul class="list-disc list-inside text-[11px] font-bold text-gray-500 marker:text-[#6A9DF6]">
+                                            @foreach($alatItems as $med)
+                                                <li>{{ $med['name'] }} ({{ $med['jumlah'] }})</li>
+                                            @endforeach
+                                        </ul>
+                                    </div>
+                                    @endif
                                 @endif
                             </div>
                         </div>

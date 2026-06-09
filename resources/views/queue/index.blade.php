@@ -131,17 +131,7 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y-[2px] divide-gray-50">
-                        @php
-                            // Calculate actual daily queue numbers (chronological order)
-                            $dailyCounters = [];
-                            foreach($patients->reverse() as $p) {
-                                $date = $p->created_at->format('Y-m-d');
-                                if(!isset($dailyCounters[$date])) $dailyCounters[$date] = 0;
-                                $dailyCounters[$date]++;
-                                $p->queue_number = $dailyCounters[$date];
-                            }
-                        @endphp
-                        
+
                         @forelse($patients ?? [] as $index => $patient)
                         @php
                             // Determine status

@@ -63,7 +63,7 @@
                     {{ now()->format('H:i') }}
                 </span>
                 <script>
-                    let dashboardServerTime = {{ now()->timestamp }} * 1000;
+                    let dashboardServerTime = Number("{{ now()->timestamp }}") * 1000;
                     setInterval(function() {
                         dashboardServerTime += 1000;
                         const d = new Date(dashboardServerTime);

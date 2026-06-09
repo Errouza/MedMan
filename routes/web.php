@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 
@@ -29,9 +28,6 @@ Route::middleware('auth')->group(function () {
         $note->delete();
         return back()->with('success', 'Catatan berhasil dihapus!');
     })->name('notes.destroy');
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     
     // Rute untuk Admin & Dokter (Shared tapi berbeda logika di dalam)
     Route::get('/patients', function(\Illuminate\Http\Request $request) { 
@@ -102,22 +98,44 @@ Route::middleware('auth')->group(function () {
             'harga' => 'required|numeric|min:0',
         ]);
         
-        $totalAlatMedis = 0;
+        $prescription = null;
         
-        // Proses Alat Medis Habis Pakai (Langsung memotong stok dan menambah harga layanan)
-        if ($request->has('alat_medis') && is_array($request->alat_medis)) {
+        // Cek apakah ada alat medis atau resep obat
+        $hasAlatMedis = $request->has('alat_medis') && is_array($request->alat_medis) && count($request->alat_medis) > 0 && !empty($request->alat_medis[0]);
+        $hasResepObat = $request->has('resep_obat') && is_array($request->resep_obat) && count($request->resep_obat) > 0 && !empty($request->resep_obat[0]);
+        
+        if ($hasAlatMedis || $hasResepObat) {
+            $prescription = \App\Models\Prescription::create([
+                'patient_id' => $patient->patient_id,
+                'status' => 'pending'
+            ]);
+        }
+
+        // Proses Alat Medis Habis Pakai
+        if ($hasAlatMedis) {
             foreach ($request->alat_medis as $index => $medicineName) {
                 if (empty($medicineName)) continue;
                 $jumlah = $request->alat_jumlah[$index] ?? 1;
                 
-                $medicine = \App\Models\Medicine::firstOrCreate(
-                    ['name' => $medicineName, 'category' => 'medical_consumable'],
-                    ['price' => 0, 'stock' => 0]
-                );
+                $medicine = \App\Models\Medicine::where('name', $medicineName)->first();
+                if (!$medicine) {
+                    $medicine = \App\Models\Medicine::create([
+                        'name' => $medicineName,
+                        'category' => 'medical_consumable',
+                        'price' => 0,
+                        'stock' => 0
+                    ]);
+                }
                 
                 if ($medicine) {
-                    $totalAlatMedis += ($medicine->price * $jumlah);
-                    $medicine->decrement('stock', $jumlah);
+                    \App\Models\PrescriptionItem::create([
+                        'prescription_id' => $prescription->id,
+                        'medicine_id' => $medicine->id,
+                        'dosis' => '-',
+                        'keterangan' => 'Alat Medis Habis Pakai',
+                        'jumlah' => $jumlah,
+                        'harga' => $medicine->price,
+                    ]);
                 }
             }
         }
@@ -126,23 +144,23 @@ Route::middleware('auth')->group(function () {
             'gejala' => $request->gejala,
             'diagnosa' => $request->diagnosa,
             'tindakan' => $request->tindakan,
-            'harga' => $request->harga + $totalAlatMedis,
+            'harga' => $request->harga,
             'status' => 'checked',
         ]);
 
-        if ($request->has('resep_obat') && is_array($request->resep_obat) && count($request->resep_obat) > 0 && !empty($request->resep_obat[0])) {
-            $prescription = \App\Models\Prescription::create([
-                'patient_id' => $patient->patient_id,
-                'status' => 'pending'
-            ]);
-            
+        if ($hasResepObat) {
             foreach ($request->resep_obat as $index => $medicineName) {
                 if (empty($medicineName)) continue;
                 
-                $medicine = \App\Models\Medicine::firstOrCreate(
-                    ['name' => $medicineName, 'category' => 'medicines'],
-                    ['price' => 0, 'stock' => 0]
-                );
+                $medicine = \App\Models\Medicine::where('name', $medicineName)->first();
+                if (!$medicine) {
+                    $medicine = \App\Models\Medicine::create([
+                        'name' => $medicineName,
+                        'category' => 'medicines',
+                        'price' => 0,
+                        'stock' => 0
+                    ]);
+                }
                 
                 if ($medicine) {
                     \App\Models\PrescriptionItem::create([
@@ -271,6 +289,7 @@ Route::middleware('auth')->group(function () {
             $existingPatient->occupation = $request->occupation;
             $existingPatient->address = $request->address;
             $existingPatient->birth_date = $request->birth_date;
+            $existingPatient->daily_queue_number = \App\Models\Patient::whereDate('created_at', today())->max('daily_queue_number') + 1;
             $existingPatient->save();
 
             return back()->with('success', 'Data Pasien Lama dikenali. Kunjungan baru untuk ' . $existingPatient->name . ' berhasil ditambahkan ke antrean!');
@@ -288,6 +307,7 @@ Route::middleware('auth')->group(function () {
             'gejala' => $request->gejala,
             'tindakan' => $request->tindakan,
             'status' => 'waiting',
+            'daily_queue_number' => \App\Models\Patient::whereDate('created_at', today())->max('daily_queue_number') + 1,
         ]);
 
         return back()->with('success', 'Data Pasien Baru ' . $request->name . ' Berhasil Disimpan!');
@@ -308,6 +328,7 @@ Route::middleware('auth')->group(function () {
         $patient->diagnosa = null;
         $patient->harga = null;
         $patient->created_at = now();
+        $patient->daily_queue_number = \App\Models\Patient::whereDate('created_at', today())->max('daily_queue_number') + 1;
         $patient->save();
 
         return redirect()->route('dashboard')->with('success', 'Kunjungan baru untuk pasien ' . $patient->name . ' berhasil dibuat dan masuk antrean!');
@@ -349,10 +370,11 @@ Route::middleware('auth')->group(function () {
         if ($prescriptions) {
             $prescriptionData = [];
             foreach($prescriptions->items as $item) {
-                $inputPrice = $request->input("items.{$item->id}.price", 0);
-                
                 $medicine = $item->medicine;
+                
                 if ($medicine) {
+                    $inputPrice = $request->input("items.{$item->id}.price", 0);
+                    
                     // Update the price for this item and the base medicine
                     $medicine->update(['price' => $inputPrice]);
                     $item->update(['harga' => $inputPrice]);
